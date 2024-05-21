@@ -189,4 +189,5 @@ In conclusion, the Al Asel Store management system is a comprehensive solution d
 Iam way so grateful happy and proud of achieve that huge range of flexabilty and efficiency
 
 Demo video: https://youtu.be/0q1bPAbHGvk
+
 THANKS!
