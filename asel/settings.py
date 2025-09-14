@@ -12,30 +12,23 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 import os
 from pathlib import Path
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Environment Detection
-ENVIRONMENT = os.environ.get('DJANGO_ENVIRONMENT', 'development')
+ENVIRONMENT = config('DJANGO_ENVIRONMENT', default='development')
 
 # SECURITY WARNING: keep the secret key used in production secret!
-if ENVIRONMENT == 'production':
-    SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-hyv7&3ft0xp$u!0*z-n^q%&mt-oh*nj53o9onh5yap83^%94b*')
-else:
-    SECRET_KEY = 'django-insecure-hyv7&3ft0xp$u!0*z-n^q%&mt-oh*nj53o9onh5yap83^%94b*'
+SECRET_KEY = config('SECRET_KEY', default='django-insecure-hyv7&3ft0xp$u!0*z-n^q%&mt-oh*nj53o9onh5yap83^%94b*')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = ENVIRONMENT != 'production'
 
 # Host configuration
 if ENVIRONMENT == 'production':
-    ALLOWED_HOSTS = [
-        'yourusername.pythonanywhere.com',  # Replace with your PythonAnywhere username
-        'www.yourusername.pythonanywhere.com',  # Replace with your PythonAnywhere username
-        'localhost',
-        '127.0.0.1',
-    ]
+    ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
 else:
     ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
 
@@ -222,12 +215,12 @@ SESSION_SAVE_EVERY_REQUEST = True
 # Email Configuration (for production)
 if ENVIRONMENT == 'production':
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
-    EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
-    EMAIL_USE_TLS = True
-    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
-    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
-    DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@yourdomain.com')
+    EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
+    EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
+    EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+    EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+    EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+    DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@yourdomain.com')
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
