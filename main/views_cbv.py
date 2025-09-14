@@ -16,7 +16,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from .models import Customer, Order, Item, OrderItem, Category, Store_Order, Store_OrderItem
 from .forms import CategoryForm, CustomerForm, ItemForm
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 import datetime
 
 
@@ -676,14 +676,6 @@ class CreateCustomerView(LoginRequiredMixin, TemplateView):
             })
 
 
-class ItemsView(LoginRequiredMixin, ListView):
-    model = Item
-    template_name = "main/items_view.html"
-    context_object_name = "items"
-    login_url = "/login/"
-
-    def get_queryset(self):
-        return Item.objects.all().order_by("-used_quantity")
 
 
 class UpdateItemView(LoginRequiredMixin, DetailView):
@@ -796,6 +788,21 @@ def month_sales(request):
         month = int(request.GET.get("m"))
         month_data = get_totalsales_formonth(year, month)
         shahr = arabic_months.get(month, None)
+        
+        # Get the actual order objects for the template
+        start_date = datetime.date(year, month, 1)
+        if month == 12:
+            end_date = datetime.date(year + 1, 1, 1)
+        else:
+            end_date = datetime.date(year, month + 1, 1)
+            
+        orders = Order.objects.filter(created_at__range=(start_date, end_date), is_used=True).order_by("-created_at")
+        coming_orders = Store_Order.objects.filter(created_at__range=(start_date, end_date)).order_by("-created_at")
+        
+        # Add the actual order objects to month_data
+        month_data["orders"] = orders
+        month_data["coming_orders"] = coming_orders
+        
     except ValueError:
         return HttpResponse("error: خطأ في ادخال الشهر او السنة.")
 
@@ -986,3 +993,253 @@ def coming_change_rest(request):
 def coming_put_rest(request):
     # This will be converted later
     pass
+
+
+# Management Views for Categories and Items
+class CategoryManagementView(LoginRequiredMixin, TemplateView):
+    template_name = "main/category_management.html"
+    login_url = "/login/"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        categories = Category.objects.all().order_by('name')
+        
+        # Get usage statistics for each category
+        category_stats = []
+        for category in categories:
+            items_count = Item.objects.filter(category=category).count()
+            used_items_count = Item.objects.filter(category=category, used_quantity__gt=0).count()
+            total_orders = OrderItem.objects.filter(item__category=category).count()
+            
+            category_stats.append({
+                'category': category,
+                'items_count': items_count,
+                'used_items_count': used_items_count,
+                'total_orders': total_orders,
+                'can_delete': items_count == 0  # Can only delete if no items
+            })
+        
+        context.update({
+            "category_stats": category_stats,
+            "form": CategoryForm(),
+        })
+        return context
+
+    def post(self, request, *args, **kwargs):
+        form = CategoryForm(request.POST)
+        if form.is_valid():
+            category_name = form.cleaned_data['name']
+            Category.objects.create(name=category_name)
+            return HttpResponseRedirect(request.path)
+        else:
+            return render(request, self.template_name, {
+                "category_stats": self.get_context_data()["category_stats"],
+                "form": form,
+                "err_message": "حدث خطأ في تسجيل النوع من الممكن تشابه الاسم مع اخر موجود بالفعل",
+            })
+
+
+class ItemManagementView(LoginRequiredMixin, TemplateView):
+    template_name = "main/item_management.html"
+    login_url = "/login/"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        items = Item.objects.all().order_by('category__name', 'name')
+        
+        # Get usage statistics for each item
+        item_stats = []
+        for item in items:
+            total_orders = OrderItem.objects.filter(item=item).count()
+            total_quantity_sold = OrderItem.objects.filter(item=item).aggregate(
+                total=Sum('quantity')
+            )['total'] or 0
+            
+            item_stats.append({
+                'item': item,
+                'total_orders': total_orders,
+                'total_quantity_sold': total_quantity_sold,
+                'can_delete': total_orders == 0  # Can only delete if never used in orders
+            })
+        
+        context.update({
+            "item_stats": item_stats,
+            "form": ItemForm(),
+            "categories": Category.objects.all().order_by('name'),
+        })
+        return context
+
+    def post(self, request, *args, **kwargs):
+        form = ItemForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return HttpResponseRedirect(request.path)
+        else:
+            return render(request, self.template_name, {
+                "item_stats": self.get_context_data()["item_stats"],
+                "form": form,
+                "categories": Category.objects.all().order_by('name'),
+                "err_message": "حدث خطأ في تسجيل المنتج من الممكن تشابه الاسم مع اخر موجود بالفعل",
+            })
+
+
+class DeleteCategoryView(LoginRequiredMixin, View):
+    login_url = "/login/"
+
+    def post(self, request, category_id, *args, **kwargs):
+        try:
+            category = Category.objects.get(id=category_id)
+            items_count = Item.objects.filter(category=category).count()
+            
+            if items_count > 0:
+                return JsonResponse({
+                    'success': False,
+                    'message': f'لا يمكن حذف النوع "{category.name}" لأنه يحتوي على {items_count} منتج'
+                })
+            
+            category_name = category.name
+            category.delete()
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'تم حذف النوع "{category_name}" بنجاح'
+            })
+        except Category.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'message': 'النوع غير موجود'
+            })
+
+
+class DeleteItemView(LoginRequiredMixin, View):
+    login_url = "/login/"
+
+    def post(self, request, item_id, *args, **kwargs):
+        try:
+            item = Item.objects.get(id=item_id)
+            total_orders = OrderItem.objects.filter(item=item).count()
+            
+            if total_orders > 0:
+                return JsonResponse({
+                    'success': False,
+                    'message': f'لا يمكن حذف المنتج "{item.name}" لأنه مستخدم في {total_orders} طلب'
+                })
+            
+            item_name = item.name
+            item.delete()
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'تم حذف المنتج "{item_name}" بنجاح'
+            })
+        except Item.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'message': 'المنتج غير موجود'
+            })
+
+
+class UpdateCategoryView(LoginRequiredMixin, View):
+    login_url = "/login/"
+
+    def post(self, request, category_id, *args, **kwargs):
+        try:
+            category = Category.objects.get(id=category_id)
+            new_name = request.POST.get('name', '').strip()
+            
+            if not new_name:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'اسم النوع لا يمكن أن يكون فارغاً'
+                })
+            
+            # Check if name already exists
+            if Category.objects.filter(name=new_name).exclude(id=category_id).exists():
+                return JsonResponse({
+                    'success': False,
+                    'message': 'اسم النوع موجود بالفعل'
+                })
+            
+            old_name = category.name
+            category.name = new_name
+            category.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'تم تحديث النوع من "{old_name}" إلى "{new_name}" بنجاح'
+            })
+        except Category.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'message': 'النوع غير موجود'
+            })
+
+
+class UpdateItemView(LoginRequiredMixin, View):
+    login_url = "/login/"
+
+    def post(self, request, item_id, *args, **kwargs):
+        try:
+            item = Item.objects.get(id=item_id)
+            
+            # Get form data
+            name = request.POST.get('name', '').strip()
+            category_id = request.POST.get('category')
+            real_price = request.POST.get('real_price')
+            gomla_price = request.POST.get('gomla_price')
+            market_price = request.POST.get('market_price')
+            stock_quantity = request.POST.get('stock_quantity')
+            
+            # Validate required fields
+            if not name or not category_id:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'جميع الحقول مطلوبة'
+                })
+            
+            # Check if name already exists
+            if Item.objects.filter(name=name).exclude(id=item_id).exists():
+                return JsonResponse({
+                    'success': False,
+                    'message': 'اسم المنتج موجود بالفعل'
+                })
+            
+            # Validate prices
+            try:
+                real_price = Decimal(real_price) if real_price else Decimal('0')
+                gomla_price = Decimal(gomla_price) if gomla_price else Decimal('0')
+                market_price = Decimal(market_price) if market_price else Decimal('0')
+                stock_quantity = int(stock_quantity) if stock_quantity else 0
+            except (ValueError, InvalidOperation):
+                return JsonResponse({
+                    'success': False,
+                    'message': 'قيم الأسعار أو الكمية غير صحيحة'
+                })
+            
+            # Get category
+            try:
+                category = Category.objects.get(id=category_id)
+            except Category.DoesNotExist:
+                return JsonResponse({
+                    'success': False,
+                    'message': 'النوع المحدد غير موجود'
+                })
+            
+            # Update item
+            item.name = name
+            item.category = category
+            item.real_price = real_price
+            item.gomla_price = gomla_price
+            item.market_price = market_price
+            item.stock_quantity = stock_quantity
+            item.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'تم تحديث المنتج "{item.name}" بنجاح'
+            })
+        except Item.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'message': 'المنتج غير موجود'
+            })

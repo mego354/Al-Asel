@@ -39,8 +39,13 @@ urlpatterns = [
     path("all_rest_orders", views.all_rest_orders, name="all_rest_orders"),
     path("all_rest_coming_orders", views.all_rest_coming_orders, name="all_rest_coming_orders"),
 
-    path("items_view", views.ItemsView.as_view(), name="items_view"),
-    path("items_view/<int:item_id>", views.UpdateItemView.as_view(), name="update_item"),
+    # Management URLs
+    path("manage/categories", views.CategoryManagementView.as_view(), name="category_management"),
+    path("manage/items", views.ItemManagementView.as_view(), name="item_management"),
+    path("manage/categories/<int:category_id>/delete", views.DeleteCategoryView.as_view(), name="delete_category"),
+    path("manage/items/<int:item_id>/delete", views.DeleteItemView.as_view(), name="delete_item"),
+    path("manage/categories/<int:category_id>/update", views.UpdateCategoryView.as_view(), name="update_category"),
+    path("manage/items/<int:item_id>/update", views.UpdateItemView.as_view(), name="update_item_management"),
     ###################### api ######################         
     path("users_search/<str:text>", views.UsersSearchView.as_view(), name="users_search"),
 ]
