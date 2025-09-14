@@ -115,13 +115,25 @@
                   </a>
                 </li>
                 <li>
-                  <a href="{% url 'main:items_view' %}" class="group flex items-center space-x-3 space-x-reverse px-3 py-3 rounded-xl {% if 'items_view' in request.resolver_match.url_name %}bg-primary text-white shadow-lg{% else %}text-gray-700 hover:bg-gray-100 hover:text-primary{% endif %} transition-all duration-200">
-                    <div class="w-10 h-10 rounded-lg flex items-center justify-center {% if 'items_view' in request.resolver_match.url_name %}bg-white/20{% else %}bg-primary/10 group-hover:bg-primary/20{% endif %} transition-colors">
-                      <i class="fa-solid fa-box text-lg"></i>
+                  <a href="{% url 'main:category_management' %}" class="group flex items-center space-x-3 space-x-reverse px-3 py-3 rounded-xl {% if 'category_management' in request.resolver_match.url_name %}bg-primary text-white shadow-lg{% else %}text-gray-700 hover:bg-gray-100 hover:text-primary{% endif %} transition-all duration-200">
+                    <div class="w-10 h-10 rounded-lg flex items-center justify-center {% if 'category_management' in request.resolver_match.url_name %}bg-white/20{% else %}bg-primary/10 group-hover:bg-primary/20{% endif %} transition-colors">
+                      <i class="fa-solid fa-tags text-lg"></i>
                     </div>
                     <div class="flex-1">
-                      <span class="font-medium">المنتجات</span>
-                      <p class="text-xs opacity-75">عرض وإدارة المنتجات</p>
+                      <span class="font-medium">إدارة الأنواع</span>
+                      <p class="text-xs opacity-75">إدارة أنواع المنتجات</p>
+                    </div>
+                    <i class="fa-solid fa-chevron-left text-xs opacity-50 group-hover:opacity-100 transition-opacity"></i>
+                  </a>
+                </li>
+                <li>
+                  <a href="{% url 'main:item_management' %}" class="group flex items-center space-x-3 space-x-reverse px-3 py-3 rounded-xl {% if 'item_management' in request.resolver_match.url_name %}bg-primary text-white shadow-lg{% else %}text-gray-700 hover:bg-gray-100 hover:text-primary{% endif %} transition-all duration-200">
+                    <div class="w-10 h-10 rounded-lg flex items-center justify-center {% if 'item_management' in request.resolver_match.url_name %}bg-white/20{% else %}bg-primary/10 group-hover:bg-primary/20{% endif %} transition-colors">
+                      <i class="fa-solid fa-cogs text-lg"></i>
+                    </div>
+                    <div class="flex-1">
+                      <span class="font-medium">إدارة المنتجات</span>
+                      <p class="text-xs opacity-75">إدارة المنتجات بالتفصيل</p>
                     </div>
                     <i class="fa-solid fa-chevron-left text-xs opacity-50 group-hover:opacity-100 transition-opacity"></i>
                   </a>
