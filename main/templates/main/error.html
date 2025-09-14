@@ -1,24 +1,65 @@
- {% extends "main/layout.html" %}
+{% extends "main/layout.html" %}
+{% load static %}
 
 {% block body %}
-
-    <div class="error">
-
-        <h1>للاسف تعرضت الي عطلا ما </h1>
-        <h2>{{message}}<h2>
-        {% if message2%}
-        <a href="{% url 'main:users' %}" class="submit_button btn btn-outline-info" style="background-color: white;">{{message2}}</a>
-        {% comment %} <input type="submit" class="submit_button btn btn-outline-danger" style="background-color: white; color: #ea433b;" value="حذف"> {% endcomment %}
-
-        {% elif message3%}
-        <a href="{% url 'main:user' user_id %}" class="submit_button">{{message3}}</a>
-        {% elif message4%}
-            {{message4}}
-        {% elif message5%}
-        {{message5}}
-
-        {% endif %}
-
-        </div>
-
-{%endblock%}
+<div class="min-h-screen flex items-center justify-center bg-gray-50">
+  <div class="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
+    <!-- Error Icon -->
+    <div class="mb-6">
+      <i class="fa-solid fa-exclamation-triangle text-6xl text-red-500"></i>
+    </div>
+    
+    <!-- Error Message -->
+    <h1 class="text-2xl font-bold text-gray-900 mb-4">للأسف تعرضت إلى عطل ما</h1>
+    <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+      <p class="text-red-700 font-medium">{{ message }}</p>
+    </div>
+    
+    <!-- Additional Messages -->
+    {% if message2 %}
+    <div class="mb-4">
+      <a 
+        href="{% url 'main:users' %}" 
+        class="inline-flex items-center px-6 py-3 bg-primary hover:bg-primary/90 text-white font-medium rounded-lg transition-colors"
+      >
+        <i class="fa-solid fa-arrow-right ml-2"></i>
+        {{ message2 }}
+      </a>
+    </div>
+    {% elif message3 %}
+    <div class="mb-4">
+      <a 
+        href="{% url 'main:user' user_id %}" 
+        class="inline-flex items-center px-6 py-3 bg-primary hover:bg-primary/90 text-white font-medium rounded-lg transition-colors"
+      >
+        <i class="fa-solid fa-arrow-right ml-2"></i>
+        {{ message3 }}
+      </a>
+    </div>
+    {% elif message4 %}
+    <div class="mb-4">
+      <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+        <p class="text-yellow-700 font-medium">{{ message4 }}</p>
+      </div>
+    </div>
+    {% elif message5 %}
+    <div class="mb-4">
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <p class="text-blue-700 font-medium">{{ message5 }}</p>
+      </div>
+    </div>
+    {% endif %}
+    
+    <!-- Back to Home -->
+    <div class="mt-6">
+      <a 
+        href="{% url 'main:make_order' %}" 
+        class="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors"
+      >
+        <i class="fa-solid fa-home ml-2"></i>
+        العودة للصفحة الرئيسية
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

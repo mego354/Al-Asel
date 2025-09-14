@@ -1,74 +1,189 @@
 {% extends "main/layout.html" %}
+{% load static %}
 
 {% block body %}
-<nav style="--bs-breadcrumb-divider: '<';" aria-label="breadcrumb">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item active" aria-current="page">{{item.name}}</li>
-      <li class="breadcrumb-item active" aria-current="page">المنتجات</li>
-      <li class="breadcrumb-item active" aria-current="page">الأضافات</li>
-    </ol>
+<!-- Breadcrumb -->
+<nav class="flex mb-6" aria-label="Breadcrumb">
+  <ol class="inline-flex items-center space-x-1 space-x-reverse md:space-x-2 md:space-x-reverse">
+    <li class="inline-flex items-center">
+      <span class="text-sm font-medium text-primary">الأضافات</span>
+    </li>
+    <li>
+      <div class="flex items-center">
+        <i class="fa-solid fa-chevron-left text-gray-400 mx-1"></i>
+        <a href="{% url 'main:items_view' %}" class="ml-1 text-sm font-medium text-gray-700 hover:text-primary md:ml-2">المنتجات</a>
+      </div>
+    </li>
+    <li>
+      <div class="flex items-center">
+        <i class="fa-solid fa-chevron-left text-gray-400 mx-1"></i>
+        <span class="ml-1 text-sm font-medium text-primary md:ml-2">{{ item.name }}</span>
+      </div>
+    </li>
+  </ol>
 </nav>
 
+<!-- Alert Messages -->
 {% if err_message %}
-<div class="alert alert-danger d-flex align-items-center" role="alert">
-    <svg class="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Danger:"><use xlink:href="#exclamation-triangle-fill"/></svg>
-    <div>
-        {{ err_message }}
-    </div>
-  </div>  
+<div class="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center">
+  <i class="fa-solid fa-exclamation-triangle text-red-500 text-xl ml-3"></i>
+  <div class="text-red-700 font-medium">{{ err_message }}</div>
+</div>
 {% elif success_message %}
-  <div class="alert alert-success d-flex align-items-center" role="alert" style="display: flex; justify-content: center;">
-    <svg class="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Success:"><use xlink:href="#check-circle-fill"/></svg>
-    <div style="font-size: 20px;">
-      {{ success_message }}
-    </div>
-  </div>
+<div class="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 flex items-center">
+  <i class="fa-solid fa-check-circle text-green-500 text-xl ml-3"></i>
+  <div class="text-green-700 font-medium text-lg">{{ success_message }}</div>
+</div>
 {% endif %}
 
-<div class="container mt-5 mb-5 d-flex justify-content-center creating_item">
-    <div class="card">
-        <div class="card-body">
-            <h1 lang="ar" dir="rtl"> تعديل {{ item.name }}</h1>
-            <hr>
-            <form action="{% url 'main:update_item' item.id %}" method="post">
-                {% csrf_token %}
-
-                <div class="form-group">
-                    <div class="form_label">
-                        <label>: اسم المنتج</label>
-                    </div>
-                    <input class="form-control" type="text" name="name" value="{{ item.name }}" required>
-                </div>
-
-                <div class="form-group">
-                    <div class="form_label">
-                        <label>: سعر الجملة</label>
-                    </div>
-                    <input class="form-control" type="number" name="real_price" min="0" step="0.01" value="{{ item.real_price }}" required>
-                </div>
-
-                <div class="form-group">
-                    <div class="form_label">
-                        <label>: سعر البيع الجملة</label>
-                    </div>
-                    <input class="form-control" type="number" name="gomla_price" min="0" step="0.01" value="{{ item.gomla_price }}" required>
-                </div>
-
-                <div class="form-group">
-                    <div class="form_label">
-                        <label>: سعر البيع القطاعي</label>
-                    </div>
-                    <input class="form-control" type="number" name="market_price" min="0" step="0.01" value="{{ item.market_price }}" required>
-                </div>
-
-
-                <div class="form_button">
-                <button type="submit" class="btn btn-outline-success">حفظ التعديل</button>
-                </div>
-            </form>
-        </div>
+<!-- Main Form -->
+<div class="max-w-2xl mx-auto">
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+    <div class="p-6 border-b border-gray-200">
+      <h1 class="text-2xl font-semibold text-gray-900 flex items-center">
+        <i class="fa-solid fa-edit text-primary ml-2"></i>
+        تعديل {{ item.name }}
+      </h1>
+      <p class="text-gray-600 mt-2">قم بتعديل بيانات المنتج في النموذج أدناه</p>
     </div>
+    
+    <div class="p-6">
+      <form action="{% url 'main:update_item' item.id %}" method="post" class="space-y-6">
+        {% csrf_token %}
+
+        <!-- Product Name -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">اسم المنتج</label>
+          <input 
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary" 
+            type="text" 
+            name="name" 
+            value="{{ item.name }}" 
+            required
+          >
+        </div>
+
+        <!-- Prices Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <!-- Real Price -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">سعر الجملة</label>
+            <div class="relative">
+              <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                <span class="text-gray-500 text-sm">ج.م</span>
+              </div>
+              <input 
+                class="w-full pr-12 pl-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary" 
+                type="number" 
+                name="real_price" 
+                min="0" 
+                step="0.01" 
+                value="{{ item.real_price }}" 
+                required
+              >
+            </div>
+            <p class="mt-1 text-xs text-gray-500">السعر الذي تشتري به المنتج</p>
+          </div>
+
+          <!-- Gomla Price -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">سعر البيع الجملة</label>
+            <div class="relative">
+              <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                <span class="text-gray-500 text-sm">ج.م</span>
+              </div>
+              <input 
+                class="w-full pr-12 pl-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary" 
+                type="number" 
+                name="gomla_price" 
+                min="0" 
+                step="0.01" 
+                value="{{ item.gomla_price }}" 
+                required
+              >
+            </div>
+            <p class="mt-1 text-xs text-gray-500">السعر للعملاء الجملة</p>
+          </div>
+
+          <!-- Market Price -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">سعر البيع القطاعي</label>
+            <div class="relative">
+              <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                <span class="text-gray-500 text-sm">ج.م</span>
+              </div>
+              <input 
+                class="w-full pr-12 pl-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary" 
+                type="number" 
+                name="market_price" 
+                min="0" 
+                step="0.01" 
+                value="{{ item.market_price }}" 
+                required
+              >
+            </div>
+            <p class="mt-1 text-xs text-gray-500">السعر للعملاء العاديين</p>
+          </div>
+        </div>
+
+        <!-- Current Stock Info -->
+        <div class="bg-gray-50 rounded-lg p-4">
+          <h3 class="text-sm font-medium text-gray-700 mb-3">معلومات المخزون الحالية</h3>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div>
+              <span class="text-gray-500">المخزون الحالي:</span>
+              <span class="font-medium text-gray-900">{{ item.quantity }}</span>
+            </div>
+            <div>
+              <span class="text-gray-500">المخزون الأساسي:</span>
+              <span class="font-medium text-gray-900">{{ item.stock_quantity }}</span>
+            </div>
+            <div>
+              <span class="text-gray-500">المستخدم:</span>
+              <span class="font-medium text-gray-900">{{ item.used_quantity }}</span>
+            </div>
+            <div>
+              <span class="text-gray-500">النوع:</span>
+              <span class="font-medium text-gray-900">{{ item.category.name }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-col sm:flex-row gap-3 pt-4">
+          <button type="submit" class="flex-1 bg-primary hover:bg-primary/90 text-white font-medium py-3 px-4 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+            <i class="fa-solid fa-save ml-2"></i>
+            حفظ التعديل
+          </button>
+          <a href="{% url 'main:items_view' %}" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-medium py-3 px-4 rounded-lg transition-colors text-center focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
+            <i class="fa-solid fa-arrow-right ml-2"></i>
+            العودة للمنتجات
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Help Section -->
+  <div class="mt-8 bg-blue-50 rounded-lg p-6">
+    <h3 class="text-lg font-semibold text-blue-900 mb-4 flex items-center">
+      <i class="fa-solid fa-info-circle ml-2"></i>
+      نصائح للتعديل
+    </h3>
+    <ul class="space-y-2 text-blue-800">
+      <li class="flex items-start">
+        <i class="fa-solid fa-check text-blue-600 mt-1 ml-2"></i>
+        <span>تأكد من أن سعر البيع أعلى من سعر الجملة لضمان الربح</span>
+      </li>
+      <li class="flex items-start">
+        <i class="fa-solid fa-check text-blue-600 mt-1 ml-2"></i>
+        <span>تعديل الأسعار سيؤثر على الطلبات الجديدة فقط</span>
+      </li>
+      <li class="flex items-start">
+        <i class="fa-solid fa-check text-blue-600 mt-1 ml-2"></i>
+        <span>يمكنك تغيير النوع من صفحة إضافة المنتجات</span>
+      </li>
+    </ul>
+  </div>
 </div>
-
-
 {% endblock %}
