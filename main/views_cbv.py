@@ -1243,3 +1243,8 @@ class UpdateItemView(LoginRequiredMixin, View):
                 'success': False,
                 'message': 'المنتج غير موجود'
             })
+
+
+class HelpView(LoginRequiredMixin, TemplateView):
+    template_name = "main/help.html"
+    login_url = "/login/"

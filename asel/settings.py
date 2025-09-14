@@ -10,28 +10,36 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Set the timezone to 'Africa/Cairo'
-TIME_ZONE = 'Africa/Cairo'
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
+# Environment Detection
+ENVIRONMENT = os.environ.get('DJANGO_ENVIRONMENT', 'development')
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-hyv7&3ft0xp$u!0*z-n^q%&mt-oh*nj53o9onh5yap83^%94b*'
+if ENVIRONMENT == 'production':
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-hyv7&3ft0xp$u!0*z-n^q%&mt-oh*nj53o9onh5yap83^%94b*')
+else:
+    SECRET_KEY = 'django-insecure-hyv7&3ft0xp$u!0*z-n^q%&mt-oh*nj53o9onh5yap83^%94b*'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = ENVIRONMENT != 'production'
 
-ALLOWED_HOSTS = []
-
+# Host configuration
+if ENVIRONMENT == 'production':
+    ALLOWED_HOSTS = [
+        'yourusername.pythonanywhere.com',  # Replace with your PythonAnywhere username
+        'www.yourusername.pythonanywhere.com',  # Replace with your PythonAnywhere username
+        'localhost',
+        '127.0.0.1',
+    ]
+else:
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
 
 # Application definition
-
 INSTALLED_APPS = [
     'main',
     'django.contrib.admin',
@@ -72,10 +80,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'asel.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -83,11 +89,8 @@ DATABASES = {
     }
 }
 
-
-
 # Password validation
 # https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -103,30 +106,153 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
-
-LANGUAGE_CODE = 'en-us'
-
+LANGUAGE_CODE = 'ar'  # Arabic language
 TIME_ZONE = 'Africa/Cairo'
-
 USE_I18N = True
-
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
+STATIC_URL = '/static/'
 
-STATIC_URL = 'static/'
+if ENVIRONMENT == 'production':
+    # Production static files configuration
+    STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+    STATICFILES_DIRS = [
+        os.path.join(BASE_DIR, 'main/static'),
+    ]
+else:
+    # Development static files configuration
+    STATICFILES_DIRS = [
+        os.path.join(BASE_DIR, 'main/static'),
+    ]
+
+# Media files (for file uploads)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-HTMLVALIDATOR_ENABLED = True
-STATIC_URL = "static/"
+# Security Settings for Production
+if ENVIRONMENT == 'production':
+    # Security settings
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = 'DENY'
+    
+    # HTTPS settings (uncomment when you have SSL certificate)
+    # SECURE_SSL_REDIRECT = True
+    # SESSION_COOKIE_SECURE = True
+    # CSRF_COOKIE_SECURE = True
+    
+    # Additional security headers
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
 
+# Logging Configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs', 'django.log'),
+            'formatter': 'verbose',
+        },
+        'console': {
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+    },
+    'root': {
+        'handlers': ['console', 'file'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'main': {
+            'handlers': ['console', 'file'],
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'propagate': False,
+        },
+    },
+}
 
+# Cache Configuration
+if ENVIRONMENT == 'production':
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'unique-snowflake',
+        }
+    }
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+        }
+    }
+
+# Session Configuration
+SESSION_COOKIE_AGE = 86400  # 24 hours
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_SAVE_EVERY_REQUEST = True
+
+# Email Configuration (for production)
+if ENVIRONMENT == 'production':
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+    EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
+    EMAIL_USE_TLS = True
+    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+    DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'noreply@yourdomain.com')
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Development-specific settings
+if ENVIRONMENT == 'development':
+    # Enable Django Debug Toolbar (install django-debug-toolbar)
+    # INSTALLED_APPS.append('debug_toolbar')
+    # MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
+    # INTERNAL_IPS = ['127.0.0.1']
+    
+    # Additional development settings
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Production-specific settings
+if ENVIRONMENT == 'production':
+    # Disable Django's built-in server error page
+    DEBUG_PROPAGATE_EXCEPTIONS = True
+    
+    # Additional production optimizations
+    CONN_MAX_AGE = 60
+
+# Create logs directory if it doesn't exist
+if not os.path.exists(os.path.join(BASE_DIR, 'logs')):
+    os.makedirs(os.path.join(BASE_DIR, 'logs'))
+
+# HTML Validator (for development)
+if ENVIRONMENT == 'development':
+    HTMLVALIDATOR_ENABLED = True
