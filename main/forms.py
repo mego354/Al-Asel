@@ -5,40 +5,58 @@ class ItemForm(forms.ModelForm):
     class Meta:
         model = Item
         fields = ['category', 'name', 'real_price', 'gomla_price', 'market_price', 'stock_quantity']
-        
-    def __init__(self, *args, **kwargs):
-        super(ItemForm, self).__init__(*args, **kwargs)
-        self.fields['category'].widget.attrs['class'] = 'form-select'
-        self.fields['name'].widget.attrs['class'] = 'form-control'
-        self.fields['real_price'].widget.attrs['class'] = 'form-control'
-        self.fields['gomla_price'].widget.attrs['class'] = 'form-control'
-        self.fields['market_price'].widget.attrs['class'] = 'form-control'
-        self.fields['stock_quantity'].widget.attrs['class'] = 'form-control'
-        self.fields['real_price'].widget.attrs['min'] = '0.00'
-        self.fields['gomla_price'].widget.attrs['min'] = '0.00'
-        self.fields['market_price'].widget.attrs['min'] = '0.00'
+        widgets = {
+            'category': forms.Select(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary'
+            }),
+            'name': forms.TextInput(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary'
+            }),
+            'real_price': forms.NumberInput(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary',
+                'min': '0.00',
+                'step': '0.01'
+            }),
+            'gomla_price': forms.NumberInput(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary',
+                'min': '0.00',
+                'step': '0.01'
+            }),
+            'market_price': forms.NumberInput(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary',
+                'min': '0.00',
+                'step': '0.01'
+            }),
+            'stock_quantity': forms.NumberInput(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary',
+                'min': '0'
+            }),
+        }
         
 class CategoryForm(forms.ModelForm):
     class Meta:
         model = Category
         fields = ['name']
-
-    def __init__(self, *args, **kwargs):
-        super(CategoryForm, self).__init__(*args, **kwargs)
-        self.fields['name'].widget.attrs['class'] = 'form-control'
-        
-        
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary'
+            }),
+        }
         
 class CustomerForm(forms.ModelForm):
     class Meta:
         model = Customer
         fields = ['name', 'number', 'is_supplier']
-
-    def __init__(self, *args, **kwargs):
-        super(CustomerForm, self).__init__(*args, **kwargs)
-        self.fields['name'].widget.attrs['class'] = 'form-control'
-        self.fields['number'].widget.attrs['class'] = 'form-control'
-        self.fields['is_supplier'].widget.attrs['class'] = 'form-check-input'
-        self.fields['is_supplier'].widget.attrs['style'] = 'width: 45px; height: 22px;'
-        self.fields['number'].widget.attrs['min'] = '1000000001'
-        self.fields['number'].widget.attrs['max'] = '1599999999'
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary'
+            }),
+            'number': forms.NumberInput(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary',
+                'min': '1000000001',
+                'max': '1599999999'
+            }),
+            'is_supplier': forms.CheckboxInput(attrs={
+                'class': 'h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded'
+            }),
+        }

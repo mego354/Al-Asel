@@ -1,109 +1,173 @@
 {% extends "main/layout.html" %}
+{% load static %}
 
 {% block body %}
-<nav style="--bs-breadcrumb-divider: '<';" aria-label="breadcrumb">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item active" aria-current="page">منتج او نوع جديد</li>
-      <li class="breadcrumb-item active" aria-current="page">الأضافات</li>
-    </ol>
+<!-- Breadcrumb -->
+<nav class="flex mb-6" aria-label="Breadcrumb">
+  <ol class="inline-flex items-center space-x-1 space-x-reverse md:space-x-2 md:space-x-reverse">
+    <li class="inline-flex items-center">
+      <span class="text-sm font-medium text-primary">الأضافات</span>
+    </li>
+    <li>
+      <div class="flex items-center">
+        <i class="fa-solid fa-chevron-left text-gray-400 mx-1"></i>
+        <span class="ml-1 text-sm font-medium text-primary md:ml-2">منتج أو نوع جديد</span>
+      </div>
+    </li>
+  </ol>
 </nav>
 
+<!-- Alert Messages -->
 {% if err_message %}
-<div class="alert alert-danger d-flex align-items-center" role="alert">
-    <svg class="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Danger:"><use xlink:href="#exclamation-triangle-fill"/></svg>
-    <div>
-        {{ err_message }}
-    </div>
-  </div>  
-  {% elif success_message %}
-  <div class="alert alert-success d-flex align-items-center" role="alert" style="display: flex; justify-content: center;">
-    <svg class="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Success:"><use xlink:href="#check-circle-fill"/></svg>
-    <div style="font-size: 20px;">
-      {{ success_message }}
-    </div>
-  </div>
+<div class="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center">
+  <i class="fa-solid fa-exclamation-triangle text-red-500 text-xl ml-3"></i>
+  <div class="text-red-700 font-medium">{{ err_message }}</div>
+</div>
+{% elif success_message %}
+<div class="mb-6 bg-green-50 border border-green-200 rounded-lg p-4 flex items-center">
+  <i class="fa-solid fa-check-circle text-green-500 text-xl ml-3"></i>
+  <div class="text-green-700 font-medium text-lg">{{ success_message }}</div>
+</div>
 {% endif %}
 
-<div class="container mt-5 mb-5 d-flex justify-content-center creating_item">
-    <div class="card">
-        <div class="card-body">
-            <h1>أضافة منتج جديد</h1>
-            <hr>
-            <form action="{% url 'main:create_item' %}" method="post">
-                {% csrf_token %}
-
-                <div class="form-group">
-                    <div class="form_label">
-                        <label>: اسم المنتج</label>
-                    </div>
-                    {{ form.name }}
-                </div>
-
-                <div class="form-group">
-                    <div class="form_label">
-                        <label>: النوع</label>
-                    </div>
-                    {{ form.category }}
-                </div>
-
-                <div class="form-group">
-                    <div class="form_label">
-                        <label>: سعر الجملة</label>
-                    </div>
-                    {{ form.real_price }}
-                </div>
-
-                <div class="form-group">
-                    <div class="form_label">
-                        <label>: سعر البيع الجملة</label>
-                    </div>
-                    {{ form.gomla_price }}
-                </div>
-
-                <div class="form-group">
-                    <div class="form_label">
-                        <label>: سعر البيع القطاعي</label>
-                    </div>
-                    {{ form.market_price }}
-                </div>
-
-                <div class="form-group">
-                    <div class="form_label">
-                        <label>: الكميه الاساسية</label>
-                    </div>
-                    {{ form.stock_quantity }}
-                </div>
-
-                <div class="form_button">
-                <button type="submit" class="btn btn-outline-success">تسجيل</button>
-                </div>
-            </form>
-        </div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+  <!-- Create Item Form -->
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+    <div class="p-6 border-b border-gray-200">
+      <h1 class="text-2xl font-semibold text-gray-900 flex items-center">
+        <i class="fa-solid fa-plus-circle text-primary ml-2"></i>
+        إضافة منتج جديد
+      </h1>
     </div>
+    
+    <div class="p-6">
+      <form action="{% url 'main:create_item' %}" method="post" class="space-y-6">
+        {% csrf_token %}
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Product Name -->
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700 mb-2">اسم المنتج</label>
+            {{ form.name }}
+            {% if form.name.errors %}
+              <div class="mt-1 text-sm text-red-600">{{ form.name.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Category -->
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700 mb-2">النوع</label>
+            {{ form.category }}
+            {% if form.category.errors %}
+              <div class="mt-1 text-sm text-red-600">{{ form.category.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Real Price -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">سعر الجملة</label>
+            {{ form.real_price }}
+            {% if form.real_price.errors %}
+              <div class="mt-1 text-sm text-red-600">{{ form.real_price.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Stock Quantity -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">الكمية الأساسية</label>
+            {{ form.stock_quantity }}
+            {% if form.stock_quantity.errors %}
+              <div class="mt-1 text-sm text-red-600">{{ form.stock_quantity.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Gomla Price -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">سعر البيع الجملة</label>
+            {{ form.gomla_price }}
+            {% if form.gomla_price.errors %}
+              <div class="mt-1 text-sm text-red-600">{{ form.gomla_price.errors.0 }}</div>
+            {% endif %}
+          </div>
+
+          <!-- Market Price -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">سعر البيع القطاعي</label>
+            {{ form.market_price }}
+            {% if form.market_price.errors %}
+              <div class="mt-1 text-sm text-red-600">{{ form.market_price.errors.0 }}</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="pt-4">
+          <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+            <i class="fa-solid fa-plus ml-2"></i>
+            تسجيل المنتج
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Create Category Form -->
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+    <div class="p-6 border-b border-gray-200">
+      <h1 class="text-2xl font-semibold text-gray-900 flex items-center">
+        <i class="fa-solid fa-tags text-primary ml-2"></i>
+        إضافة نوع جديد
+      </h1>
+    </div>
+    
+    <div class="p-6">
+      <form action="{% url 'main:create_category' %}" method="post" class="space-y-6">
+        {% csrf_token %}
+
+        <!-- Category Name -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">اسم النوع</label>
+          {{ category_form.name }}
+          {% if category_form.name.errors %}
+            <div class="mt-1 text-sm text-red-600">{{ category_form.name.errors.0 }}</div>
+          {% endif %}
+        </div>
+
+        <!-- Submit Button -->
+        <div class="pt-4">
+          <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+            <i class="fa-solid fa-plus ml-2"></i>
+            تسجيل النوع
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>
 
-
-<div class="container mt-5 mb-5 d-flex justify-content-center creating_item">
-    <div class="card">
-        <div class="card-body">
-            <h1>أضافة نوع جديد</h1>
-            <hr>
-            <form action="{% url 'main:create_category' %}" method="post">
-                {% csrf_token %}
-
-                <div class="form-group">
-                    <div class="form_label">
-                        <label>: اسم النوع</label>
-                    </div>
-                    {{ category_form.name }}
-                </div>
-
-
-                <div class="form_button">
-                <button type="submit" class="btn btn-outline-success">تسجيل</button>
-                </div>
-            </form>
-        </div>
-    </div>
+<!-- Help Section -->
+<div class="mt-8 bg-blue-50 rounded-lg p-6">
+  <h3 class="text-lg font-semibold text-blue-900 mb-4 flex items-center">
+    <i class="fa-solid fa-info-circle ml-2"></i>
+    نصائح لإضافة المنتجات
+  </h3>
+  <ul class="space-y-2 text-blue-800">
+    <li class="flex items-start">
+      <i class="fa-solid fa-check text-blue-600 mt-1 ml-2"></i>
+      <span>تأكد من إدخال جميع الأسعار بالجنيه المصري</span>
+    </li>
+    <li class="flex items-start">
+      <i class="fa-solid fa-check text-blue-600 mt-1 ml-2"></i>
+      <span>سعر الجملة هو السعر الذي تشتري به المنتج</span>
+    </li>
+    <li class="flex items-start">
+      <i class="fa-solid fa-check text-blue-600 mt-1 ml-2"></i>
+      <span>سعر البيع الجملة هو السعر الذي تبيعه للعملاء الجملة</span>
+    </li>
+    <li class="flex items-start">
+      <i class="fa-solid fa-check text-blue-600 mt-1 ml-2"></i>
+      <span>سعر البيع القطاعي هو السعر الذي تبيعه للعملاء العاديين</span>
+    </li>
+  </ul>
 </div>
 {% endblock %}

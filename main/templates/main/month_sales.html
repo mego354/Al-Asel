@@ -2,182 +2,342 @@
 {% load static %}
 
 {% block body %}
-<nav style="--bs-breadcrumb-divider: '<';" aria-label="breadcrumb">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item active" aria-current="page"> {{shahr}}</li>
-        <li class="breadcrumb-item active" aria-current="page"> {{year}}</li>
-        <li class="breadcrumb-item"><a href="{% url 'main:total_orders' %}"> المبيعات</a></li>
-    </ol>
+<!-- Breadcrumb -->
+<nav class="flex mb-6" aria-label="Breadcrumb">
+  <ol class="inline-flex items-center space-x-1 space-x-reverse md:space-x-2 md:space-x-reverse">
+    <li class="inline-flex items-center">
+      <a href="{% url 'main:total_orders' %}" class="text-sm font-medium text-gray-700 hover:text-primary">المبيعات</a>
+    </li>
+    <li>
+      <div class="flex items-center">
+        <i class="fa-solid fa-chevron-left text-gray-400 mx-1"></i>
+        <span class="ml-1 text-sm font-medium text-primary md:ml-2">{{ year }}</span>
+      </div>
+    </li>
+    <li>
+      <div class="flex items-center">
+        <i class="fa-solid fa-chevron-left text-gray-400 mx-1"></i>
+        <span class="ml-1 text-sm font-medium text-primary md:ml-2">{{ shahr }}</span>
+      </div>
+    </li>
+  </ol>
 </nav>
 
-    <h1 class="list-group-item" style="text-align: center;color: rgb(48, 82, 82); margin-bottom: 10px;">
-        <i class="fa-solid fa-chart-line fa-flip-horizontal" style="color: #003ca3;"></i>
-        خلال شهر {{ shahr }}
+<!-- Header -->
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-8">
+  <div class="p-6 text-center">
+    <h1 class="text-3xl font-bold text-primary flex items-center justify-center">
+      <i class="fa-solid fa-chart-line ml-2"></i>
+      خلال شهر {{ shahr }} {{ year }}
     </h1>
+  </div>
+</div>
 
-    <div class="accordion-body" style="display: grid; grid-template-columns: 50% 40%; column-gap: 10%;">
-        <div>
-            <canvas id="month_chart" width="800" height="400"></canvas>
-        </div>  
-
-        <div>
-            <ul class="list-group list-group-flush" style="text-align: right; font-family: Roboto arial; font-size: 19px;">
-                <br>
-                <li class="list-group-item  ">{{ month_data.order_count }}  عدد الطلبات </li>
-                <li class="list-group-item"></li>
-                <br>
-
-                <li class="list-group-item  ">{{ month_data.orders_sales }}  اجمالي مبيعات </li>
-                <li class="list-group-item"></li>
-                <br>
-
-                <li class="list-group-item  ">{{ month_data.average_order }}  متوسط سعر الطلب</li>
-                <li class="list-group-item"></li>
-                <br>
-
-                <li class="list-group-item  ">{{ month_data.debt }}  اجمالي الآجل من المبيعات</li>
-                <li class="list-group-item"></li>
-                <br>
-
-                <li class="list-group-item  ">{{ month_data.profit }}  اجمالي الربح من المبيعات</li>
-                <li class="list-group-item"></li>
-                <br>
-
-                <li class="list-group-item  ">{{ month_data.coming_sales }}  اجمالي سعر الطلبيات  </li>
-                <li class="list-group-item"></li>
-                <br>
-
-                <li class="list-group-item  ">{{ month_data.coming_debt }}  اجمالي آجل للطلبيات </li>
-                <li class="list-group-item"></li>
-                <br>
-            </ul>
-        </div>
+<!-- Charts and Statistics -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+  <!-- Monthly Chart -->
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+    <div class="p-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">توزيع المبيعات</h3>
+      <div class="h-80">
+        <canvas id="month_chart"></canvas>
+      </div>
     </div>
+  </div>
 
-{% comment %}                   orders                                     {% endcomment %}
-    <div class="display_users_body">
-    
-        <div class="display_users">
-            <h2>جميع الاوردرات خلال الشهر<h2>
-                <hr>
-            <ul style="line-height:150%; list-style-type:none;">
-                {% for order in month_data.orders %}
-                <li>
-                    <a dir="rtl" lang="ar" class="submit_button" href={% url 'main:order_info' order.id %}>
-                        {% if not order.customer.is_shop %}
-                        {{order.id}}# للعميل {{ order.customer.name }} بتاريخ {{ order.created_at|date:"d/m/y" }}
-                        {% else %}
-                        {{order.id}}# الي فرع {{ order.customer.name }} بتاريخ {{ order.created_at|date:"d/m/y" }}
-                        {% endif %}
-
-                        {% if order.is_fully_paid %}
-                        <i class="fa-regular fa-circle-check"></i>
-                        {% else %}
-                        <i class="fa-regular fa-circle-xmark"></i>
-                        {% endif %}
-                </a>
-            </li>
-            {% endfor %}
-            </ul>
+  <!-- Monthly Statistics -->
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+    <div class="p-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-6">إحصائيات الشهر</h3>
+      <div class="space-y-4">
+        <div class="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+          <div>
+            <h4 class="text-sm font-medium text-blue-900">عدد الطلبات</h4>
+            <p class="text-2xl font-bold text-blue-600">{{ month_data.order_count }}</p>
+          </div>
+          <i class="fa-solid fa-shopping-cart text-blue-500 text-2xl"></i>
         </div>
-        <div class="display_users">
-            <h2>جميع الطلبيات خلال الشهر<h2>
-                <hr>
-            <ul style="line-height:150%; list-style-type:none;">
-                {% for order in month_data.coming_orders %}
-                    <a dir="rtl" lang="ar" class="submit_button" href={% url 'main:coming_order_info' order.id %}>
-                        {{order.id}}# لحساب فرع {{ order.customer.name }} بتاريخ {{ order.created_at|date:"d/m/y" }}
-                        {% if order.is_fully_paid %}
-                        <i class="fa-regular fa-circle-check"></i>
-                        {% else %}
-                        <i class="fa-regular fa-circle-xmark"></i>
-                        {% endif %}
 
-                    </a>
-                </li>
+        <div class="flex items-center justify-between p-4 bg-green-50 rounded-lg">
+          <div>
+            <h4 class="text-sm font-medium text-green-900">إجمالي مبيعات</h4>
+            <p class="text-2xl font-bold text-green-600 money">{{ month_data.orders_sales }}</p>
+          </div>
+          <i class="fa-solid fa-chart-line text-green-500 text-2xl"></i>
+        </div>
+
+        <div class="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
+          <div>
+            <h4 class="text-sm font-medium text-purple-900">متوسط سعر الطلب</h4>
+            <p class="text-2xl font-bold text-purple-600 money">{{ month_data.average_order }}</p>
+          </div>
+          <i class="fa-solid fa-calculator text-purple-500 text-2xl"></i>
+        </div>
+
+        <div class="flex items-center justify-between p-4 bg-red-50 rounded-lg">
+          <div>
+            <h4 class="text-sm font-medium text-red-900">الآجل من المبيعات</h4>
+            <p class="text-2xl font-bold text-red-600 money">{{ month_data.debt }}</p>
+          </div>
+          <i class="fa-solid fa-clock text-red-500 text-2xl"></i>
+        </div>
+
+        <div class="flex items-center justify-between p-4 bg-yellow-50 rounded-lg">
+          <div>
+            <h4 class="text-sm font-medium text-yellow-900">الربح من المبيعات</h4>
+            <p class="text-2xl font-bold text-yellow-600 money">{{ month_data.profit }}</p>
+          </div>
+          <i class="fa-solid fa-coins text-yellow-500 text-2xl"></i>
+        </div>
+
+        <div class="flex items-center justify-between p-4 bg-indigo-50 rounded-lg">
+          <div>
+            <h4 class="text-sm font-medium text-indigo-900">سعر الطلبيات</h4>
+            <p class="text-2xl font-bold text-indigo-600 money">{{ month_data.coming_sales }}</p>
+          </div>
+          <i class="fa-solid fa-truck text-indigo-500 text-2xl"></i>
+        </div>
+
+        <div class="flex items-center justify-between p-4 bg-orange-50 rounded-lg">
+          <div>
+            <h4 class="text-sm font-medium text-orange-900">آجل للطلبيات</h4>
+            <p class="text-2xl font-bold text-orange-600 money">{{ month_data.coming_debt }}</p>
+          </div>
+          <i class="fa-solid fa-exclamation-triangle text-orange-500 text-2xl"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Debt Chart -->
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-8">
+  <div class="p-6">
+    <h3 class="text-lg font-semibold text-gray-900 mb-4 text-center">توزيع الديون والأرباح</h3>
+    <div class="h-96 flex items-center justify-center">
+      <canvas id="debt_chart" class="max-w-md"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- Orders Lists -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+  <!-- Sales Orders -->
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+    <div class="p-6 border-b border-gray-200">
+      <h2 class="text-xl font-semibold text-gray-900 flex items-center">
+        <i class="fa-solid fa-shopping-cart text-primary ml-2"></i>
+        جميع الطلبات خلال الشهر
+      </h2>
+    </div>
+    <div class="p-6">
+      <div class="space-y-3 max-h-96 overflow-y-auto">
+        {% for order in month_data.orders %}
+        <a 
+          href="{% url 'main:order_info' order.id %}" 
+          class="block p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200 hover:border-primary/30"
+        >
+          <div class="flex items-center justify-between">
+            <div class="flex-1">
+              <div class="flex items-center space-x-2 space-x-reverse">
+                <span class="font-semibold text-gray-900">#{{ order.id }}</span>
+                <span class="text-gray-600">
+                  {% if not order.customer.is_shop %}
+                    للعميل {{ order.customer.name }}
+                  {% else %}
+                    إلى فرع {{ order.customer.name }}
+                  {% endif %}
+                </span>
+              </div>
+              <div class="text-sm text-gray-500 mt-1">
+                <i class="fa-solid fa-calendar ml-1"></i>
+                {{ order.created_at|date:"d/m/Y" }}
+              </div>
+            </div>
+            <div class="flex items-center">
+              {% if order.is_fully_paid %}
+                <i class="fa-solid fa-check-circle text-green-500 text-xl" title="مدفوع بالكامل"></i>
+              {% else %}
+                <i class="fa-solid fa-clock text-yellow-500 text-xl" title="غير مدفوع بالكامل"></i>
+              {% endif %}
+            </div>
+          </div>
+        </a>
+        {% empty %}
+        <div class="text-center py-8 text-gray-500">
+          <i class="fa-solid fa-inbox text-4xl mb-4"></i>
+          <p>لا توجد طلبات في هذا الشهر</p>
+        </div>
         {% endfor %}
-            </ul>
-        </div>
-
-
-
+      </div>
     </div>
-{% comment %}                   debt                                     {% endcomment %}
-    <div id="debt_char" style="width: auto; height: 500px;"></div>
-{% comment %}                   script                                     {% endcomment %}
+  </div>
 
-    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-    <script type="text/javascript">
-        google.charts.load('current', {'packages':['corechart']});
-        google.charts.setOnLoadCallback(drawChart);
+  <!-- Store Orders -->
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+    <div class="p-6 border-b border-gray-200">
+      <h2 class="text-xl font-semibold text-gray-900 flex items-center">
+        <i class="fa-solid fa-truck text-primary ml-2"></i>
+        جميع الطلبيات خلال الشهر
+      </h2>
+    </div>
+    <div class="p-6">
+      <div class="space-y-3 max-h-96 overflow-y-auto">
+        {% for order in month_data.coming_orders %}
+        <a 
+          href="{% url 'main:coming_order_info' order.id %}" 
+          class="block p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200 hover:border-primary/30"
+        >
+          <div class="flex items-center justify-between">
+            <div class="flex-1">
+              <div class="flex items-center space-x-2 space-x-reverse">
+                <span class="font-semibold text-gray-900">#{{ order.id }}</span>
+                <span class="text-gray-600">لحساب فرع {{ order.customer.name }}</span>
+              </div>
+              <div class="text-sm text-gray-500 mt-1">
+                <i class="fa-solid fa-calendar ml-1"></i>
+                {{ order.created_at|date:"d/m/Y" }}
+              </div>
+            </div>
+            <div class="flex items-center">
+              {% if order.is_fully_paid %}
+                <i class="fa-solid fa-check-circle text-green-500 text-xl" title="مدفوع بالكامل"></i>
+              {% else %}
+                <i class="fa-solid fa-clock text-yellow-500 text-xl" title="غير مدفوع بالكامل"></i>
+              {% endif %}
+            </div>
+          </div>
+        </a>
+        {% empty %}
+        <div class="text-center py-8 text-gray-500">
+          <i class="fa-solid fa-truck text-4xl mb-4"></i>
+          <p>لا توجد طلبيات في هذا الشهر</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
 
-        function drawChart() {
-            var data = new google.visualization.DataTable();
-            data.addColumn('string', 'Category');
-            data.addColumn('number', 'Value');
-            data.addRows([
-                {% for name, value in debt_char_data.items %}
-                ['{{ name }}', {{ value }}],
-                {% endfor %}
-            ]);
-
-            var options = {
-                is3D: true,
-                slices: { 
-                    0: {offset: 0.1}
-                }
-            };
-
-            var chart = new google.visualization.PieChart(document.getElementById('debt_char'));
-            chart.draw(data, options);
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Monthly Chart
+  var ctx = document.getElementById('month_chart').getContext('2d');
+  var monthChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: [{% for name, value in month_char_data.items %}"{{ name }}", {% endfor %}],
+      datasets: [{
+        label: 'قيمة الشهر',
+        data: [{% for name, value in month_char_data.items %}{{ value }}, {% endfor %}],
+        backgroundColor: [
+          'rgba(59, 130, 246, 0.6)',
+          'rgba(239, 68, 68, 0.6)',
+          'rgba(245, 158, 11, 0.6)',
+          'rgba(16, 185, 129, 0.6)',
+          'rgba(139, 92, 246, 0.6)',
+          'rgba(236, 72, 153, 0.6)'
+        ],
+        borderColor: [
+          'rgba(59, 130, 246, 1)',
+          'rgba(239, 68, 68, 1)',
+          'rgba(245, 158, 11, 1)',
+          'rgba(16, 185, 129, 1)',
+          'rgba(139, 92, 246, 1)',
+          'rgba(236, 72, 153, 1)'
+        ],
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function(value) {
+              return 'EGP ' + value;
+            }
+          }
         }
-    </script>
+      },
+      plugins: {
+        title: {
+          display: true,
+          text: 'توزيع المبيعات - {{ shahr }} {{ year }}',
+          font: {
+            size: 16,
+            weight: 'bold'
+          }
+        },
+        legend: {
+          display: false
+        }
+      }
+    }
+  });
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            var ctx = document.getElementById('month_chart').getContext('2d');
-        
-            var chartData = {
-                labels: [{% for name, value in month_char_data.items %}"{{ name }}", {% endfor %}],
-                datasets: [{
-                    label: 'My Dataset',
-                    data: [{% for name, value in month_char_data.items %}{{ value }}, {% endfor %}],
-                    backgroundColor: [
-                        'rgba(75, 192, 192, 0.2)',
-                        'rgba(255, 99, 132, 0.2)',
-                        'rgba(255, 206, 86, 0.2)',
-                        'rgba(54, 162, 235, 0.2)',
-                        'rgba(153, 102, 255, 0.2)',
-                        'rgba(255, 159, 64, 0.2)'
-                    ],
-                    borderColor: [
-                        'rgba(75, 192, 192, 1)',
-                        'rgba(255, 99, 132, 1)',
-                        'rgba(255, 206, 86, 1)',
-                        'rgba(54, 162, 235, 1)',
-                        'rgba(153, 102, 255, 1)',
-                        'rgba(255, 159, 64, 1)'
-                    ],
-                    borderWidth: 1
-                }]
-            };
-        
-            var chartOptions = {
-                responsive: true, 
-                maintainAspectRatio: false, 
-                scales: {
-                    y: {
-                        beginAtZero: true 
-                    }
-                }
-            };
-        
-            var myChart = new Chart(ctx, {
-                type: 'bar',
-                data: chartData,
-                options: chartOptions
-            });
-        });
-    </script>
+  // Debt Chart
+  var ctxDebt = document.getElementById('debt_chart').getContext('2d');
+  var debtChart = new Chart(ctxDebt, {
+    type: 'doughnut',
+    data: {
+      labels: [{% for name, value in debt_char_data.items %}"{{ name }}", {% endfor %}],
+      datasets: [{
+        data: [{% for name, value in debt_char_data.items %}{{ value }}, {% endfor %}],
+        backgroundColor: [
+          'rgba(16, 185, 129, 0.8)',
+          'rgba(239, 68, 68, 0.8)'
+        ],
+        borderColor: [
+          'rgba(16, 185, 129, 1)',
+          'rgba(239, 68, 68, 1)'
+        ],
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        title: {
+          display: true,
+          text: 'توزيع الديون والأرباح',
+          font: {
+            size: 16,
+            weight: 'bold'
+          }
+        },
+        legend: {
+          display: true,
+          position: 'bottom',
+          labels: {
+            font: {
+              size: 14
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // Format money values
+  document.querySelectorAll('.money').forEach(number => {
+    let money = Number(number.innerHTML);
+    if ((money / Math.pow(10, 9)) >= 1) {
+      money = (money / Math.pow(10, 9)).toFixed(2);
+      number.innerHTML = `${money}B`;
+    } else if ((money / Math.pow(10, 6)) >= 1) {
+      money = (money / Math.pow(10, 6)).toFixed(2);
+      number.innerHTML = `${money}M`;
+    } else if ((money / Math.pow(10, 3)) >= 1) {
+      money = (money / Math.pow(10, 3)).toFixed(2);
+      number.innerHTML = `${money}K`;
+    }
+  });
+});
+</script>
 {% endblock %}

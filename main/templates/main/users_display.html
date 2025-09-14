@@ -1,83 +1,150 @@
-{% extends "main/stander_layout.html" %}
+{% extends "main/layout.html" %}
 {% load static %}
 
-{% block option %}
-<a href="{% url 'main:users' %}" class="page_option_buttton" style="box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.25);">العملاء والطلبات</a>
-<a href="{% url 'main:make_order' %}" class="page_option_buttton" >الصفحة الرئيسية</a>
-<a href="{% url 'main:total_orders' %}" class="page_option_buttton">المبيعات</a>
-{% endblock %}
 {% block body %}
-    <nav style="--bs-breadcrumb-divider: '<';" aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item active" aria-current="page"> العملاء والطلبات</li>
-        </ol>
-    </nav>
-  
-  
-    <div class="display_users_body">
- 
-        <div class="display_users" >
+<!-- Breadcrumb -->
+<nav class="flex mb-6" aria-label="Breadcrumb">
+  <ol class="inline-flex items-center space-x-1 space-x-reverse md:space-x-2 md:space-x-reverse">
+    <li class="inline-flex items-center">
+      <span class="text-sm font-medium text-primary">العملاء والطلبات</span>
+    </li>
+  </ol>
+</nav>
 
-            <ul style="line-height:350%; list-style-type:none; justify-content: start;">
-                <form action="{% url 'main:users' %}" method="post">
-                    {% csrf_token %}
-                    <li>
-                        <input class="input_search" type="number" name="order_id" min=0 placeholder="اختر الطلب برقمه الخاص" >
-                        <input value="" type="hidden" name="customer_id">
-                    </li>
-                </form>
-        
-                {% for order in orders %}
-                <li>
-                    <a dir="rtl" lang="ar" class="submit_button" href={% url 'main:order_info' order.id %}>
-                        {{order.id}}# للعميل {{ order.customer.name }} بتوقيت {{ order.created_at }}
-                        {% if order.is_fully_paid %}
-                        <i class="fa-regular fa-circle-check"></i>
-                        {% else %}
-                        <i class="fa-regular fa-circle-xmark"></i>
-                        {% endif %}
-                    </a>
-                </li>
-            {% endfor %}
-        
-            </ul>
-        
-        </div>
-
-        <div class="display_users" >
-            
-            <ul style="line-height:350%; list-style-type:none; justify-content: center;">
-                <form action="{% url 'main:users'  %}" method="post">
-                        {% csrf_token %}
-                    <li>
-                        <input class="input_search" type="text" name="customer_id" id="customer_search" min=0 placeholder="اختر العميل برقمه الخاص">
-                        <input value="" type="hidden" name="order_id">
-
-                    </li>
-                    <div id="users_search">
-                    </div>
-
-                </form>
-
-
-                {% for customer in customers %}
-                    <li>
-                        {% if customer.is_shop %}
-                        <a dir="rtl" lang="ar" class="submit_button" href={% url 'main:user' customer.id %}><i class="fa-solid fa-certificate"></i> {{ customer.name }}</a>
-                        {% else %}
-                        <a dir="rtl" lang="ar" class="submit_button" href={% url 'main:user' customer.id %}>{{ customer }}</a>
-                        {% endif %}
-                    </li>
-                {% endfor %}
-
-            </ul>
-
-        </div>
-
+<!-- Main Content -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+  <!-- Orders Section -->
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+    <div class="p-6 border-b border-gray-200">
+      <h2 class="text-xl font-semibold text-gray-900 flex items-center">
+        <i class="fa-solid fa-receipt text-primary ml-2"></i>
+        الطلبات الحديثة
+      </h2>
     </div>
+    
+    <div class="p-6">
+      <!-- Order Search -->
+      <form action="{% url 'main:users' %}" method="post" class="mb-6">
+        {% csrf_token %}
+        <div class="relative">
+          <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+            <i class="fa-solid fa-search text-gray-400"></i>
+          </div>
+          <input 
+            class="w-full pr-10 pl-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary" 
+            type="number" 
+            name="order_id" 
+            min="0" 
+            placeholder="ابحث عن الطلب برقمه الخاص"
+          >
+          <input value="" type="hidden" name="customer_id">
+        </div>
+      </form>
 
-    <script src="{% static 'main/users_search.js' %}"></script>
+      <!-- Orders List -->
+      <div class="space-y-3 max-h-96 overflow-y-auto">
+        {% for order in orders %}
+        <a 
+          href="{% url 'main:order_info' order.id %}" 
+          class="block p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200 hover:border-primary/30"
+        >
+          <div class="flex items-center justify-between">
+            <div class="flex-1">
+              <div class="flex items-center space-x-2 space-x-reverse">
+                <span class="font-semibold text-gray-900">#{{ order.id }}</span>
+                <span class="text-gray-600">للعميل {{ order.customer.name }}</span>
+              </div>
+              <div class="text-sm text-gray-500 mt-1">
+                <i class="fa-solid fa-clock ml-1"></i>
+                {{ order.created_at|date:"Y-m-d H:i" }}
+              </div>
+            </div>
+            <div class="flex items-center">
+              {% if order.is_fully_paid %}
+                <i class="fa-solid fa-check-circle text-green-500 text-xl" title="مدفوع بالكامل"></i>
+              {% else %}
+                <i class="fa-solid fa-clock text-yellow-500 text-xl" title="غير مدفوع بالكامل"></i>
+              {% endif %}
+            </div>
+          </div>
+        </a>
+        {% empty %}
+        <div class="text-center py-8 text-gray-500">
+          <i class="fa-solid fa-inbox text-4xl mb-4"></i>
+          <p>لا توجد طلبات</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
 
+  <!-- Customers Section -->
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+    <div class="p-6 border-b border-gray-200">
+      <h2 class="text-xl font-semibold text-gray-900 flex items-center">
+        <i class="fa-solid fa-users text-primary ml-2"></i>
+        العملاء
+      </h2>
+    </div>
+    
+    <div class="p-6">
+      <!-- Customer Search -->
+      <form action="{% url 'main:users' %}" method="post" class="mb-6">
+        {% csrf_token %}
+        <div class="relative">
+          <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+            <i class="fa-solid fa-search text-gray-400"></i>
+          </div>
+          <input 
+            class="w-full pr-10 pl-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary" 
+            type="text" 
+            name="customer_id" 
+            id="customer_search"
+            placeholder="ابحث عن العميل برقمه أو اسمه"
+          >
+          <input value="" type="hidden" name="order_id">
+        </div>
+        <div id="users_search" class="mt-2"></div>
+      </form>
 
+      <!-- Customers List -->
+      <div class="space-y-3 max-h-96 overflow-y-auto">
+        {% for customer in customers %}
+        <a 
+          href="{% url 'main:user' customer.id %}" 
+          class="block p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200 hover:border-primary/30"
+        >
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3 space-x-reverse">
+              {% if customer.is_shop %}
+                <i class="fa-solid fa-store text-blue-500"></i>
+                <span class="font-semibold text-gray-900">{{ customer.name }}</span>
+                <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">متجر</span>
+              {% elif customer.is_supplier %}
+                <i class="fa-solid fa-truck text-green-500"></i>
+                <span class="font-semibold text-gray-900">{{ customer.name }}</span>
+                <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">مورد</span>
+              {% else %}
+                <i class="fa-solid fa-user text-gray-500"></i>
+                <span class="font-semibold text-gray-900">{{ customer.name }}</span>
+                <span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full">عميل</span>
+              {% endif %}
+            </div>
+            <div class="text-sm text-gray-500">
+              {{ customer.number }}
+            </div>
+          </div>
+        </a>
+        {% empty %}
+        <div class="text-center py-8 text-gray-500">
+          <i class="fa-solid fa-users text-4xl mb-4"></i>
+          <p>لا توجد عملاء</p>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
 
-{%endblock%} 
+<script src="{% static 'main/users_search.js' %}"></script>
+{% endblock %}

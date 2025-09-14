@@ -1,99 +1,134 @@
 {% extends "main/layout.html" %}
 
 {% block body %}
-
-    {% if err %}
-    <div class="alert alert-danger d-flex alert-warning alert-dismissible fade show" role="alert" style="justify-content: center">
-
-        <svg class="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Danger:"><use xlink:href="#exclamation-triangle-fill"/></svg>
-        <div style="font-size: 22px;">
-        {{ err }}
-        </div>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        
-    </div>
-
-    {% endif %}
+<!-- Error Alert -->
+{% if err %}
+<div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+  <div class="flex items-center">
+    <i class="fa-solid fa-exclamation-triangle text-red-500 text-xl ml-3"></i>
+    <div class="text-red-700 font-medium">{{ err }}</div>
+  </div>
+</div>
+{% endif %}
 
 {% if not order.is_done %}
-    <nav style="--bs-breadcrumb-divider: '<';" aria-label="breadcrumb">
-        <ol class="breadcrumb">
-        <li class="breadcrumb-item active" aria-current="page">أضافة قسط للطلب</li>
-          <li class="breadcrumb-item active" aria-current="page"><a href="{% url 'main:coming_order_info' order.id %}">{{ order.id }} طلبية رقم </a></li>
-            <li class="breadcrumb-item"><a href="{% url 'main:store_coming_info' order.customer.id %}">طلبيات الفرع</a></li>
-            <li class="breadcrumb-item"><a href="{% url 'main:user' order.customer.id %}">{{ order.customer.name }} </a></li>
-            <li class="breadcrumb-item"><a href="{% url 'main:users' %}">العملاء والطلبات</a></li>
-        </ol>
-      </nav>
-      
-  
-    {% if not order.is_fully_paid %}
-        <div class="alert alert-success d-flex alert-dismissible fade show" role="alert" style="justify-content: center">
+<!-- Breadcrumb -->
+<nav class="flex mb-6" aria-label="Breadcrumb">
+  <ol class="inline-flex items-center space-x-1 space-x-reverse md:space-x-2 md:space-x-reverse">
+    <li class="inline-flex items-center">
+      <a href="{% url 'main:users' %}" class="text-sm font-medium text-gray-700 hover:text-primary">العملاء والطلبات</a>
+    </li>
+    <li>
+      <div class="flex items-center">
+        <i class="fa-solid fa-chevron-left text-gray-400 mx-1"></i>
+        <a href="{% url 'main:user' order.customer.id %}" class="ml-1 text-sm font-medium text-gray-700 hover:text-primary md:ml-2">{{ order.customer.name }}</a>
+      </div>
+    </li>
+    <li>
+      <div class="flex items-center">
+        <i class="fa-solid fa-chevron-left text-gray-400 mx-1"></i>
+        <a href="{% url 'main:store_coming_info' order.customer.id %}" class="ml-1 text-sm font-medium text-gray-700 hover:text-primary md:ml-2">طلبيات الفرع</a>
+      </div>
+    </li>
+    <li>
+      <div class="flex items-center">
+        <i class="fa-solid fa-chevron-left text-gray-400 mx-1"></i>
+        <a href="{% url 'main:coming_order_info' order.id %}" class="ml-1 text-sm font-medium text-gray-700 hover:text-primary md:ml-2">طلبية رقم {{ order.id }}</a>
+      </div>
+    </li>
+    <li>
+      <div class="flex items-center">
+        <i class="fa-solid fa-chevron-left text-gray-400 mx-1"></i>
+        <span class="ml-1 text-sm font-medium text-primary md:ml-2">إضافة قسط للطلب</span>
+      </div>
+    </li>
+  </ol>
+</nav>
 
-            <svg class="bi flex-shrink-0 me-2" width="30" height="30" role="img" aria-label="Success:"><use xlink:href="#check-circle-fill"/></svg>
-            <div style="font-size: 22px;">
-            {{ order.rest_money }} بالفعل عليه اقساط بقيمة {{ order.customer.name }} الطلبية رقم {{ order.id }} للفرع 
-            </div>
-
-            
-        </div>
-        <div style="text-align: center; ">
-            <a  style="display:block;" class="submit_button link_a " href="{% url 'main:coming_change_rest' %}?order_id={{ order.id }}"> يمكنك الدفع من هنا</a>
-        </div>
-
-    {% else %}
-
-
-        <div class="alert alert-primary d-flex  alert-dismissible fade show" role="alert" style="justify-content: space-between">
-
-            <svg class="bi flex-shrink-0 me-2" width="30" height="30" role="img" aria-label="Info:"><use xlink:href="#info-fill"/></svg>
-            <div style="font-size: 22px;">
-            {{ order.customer.name }} انت علي وشك اضافة قسط للطلب رقم {{ order.id }} للفرع 
-            </div>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            
-        </div>
-
-
-        <div class="container mt-5 mb-5 d-flex justify-content-center creating_item">
-            <div class="card">
-                <div class="card-body">
-                    <h1>{{ order.customer.name }} </h1>
-                    <hr>
-                    <h1>{{ order.id }} الطلبية</h1>
-                    <hr>
-                    <h1>{{ order.total_order_price }} الاجمالي</h1>
-                    <hr>
-                    <form action="{% url 'main:coming_put_rest' %}?order_id={{ order.id }}" method="post">
-                        {% csrf_token %}
-
-                        <div class="form-group">
-                            <div class="form_label">
-                                <label>: قيمة القسط</label>
-                            </div>
-                            <input class="form-control" type="number" name="rest_money" min="0" max="{{ order.total_order_price }}" required>
-                        </div>
-
-
-                        <div class="form_button">
-                        <button type="submit" class="btn btn-outline-success">Confirm</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-    {% endif %}
-{% else %}
-
-    <div class="alert d-flex alert-warning alert-dismissible fade show" role="alert" style="justify-content: center">
-
-        <svg class="bi flex-shrink-0 me-2" width="24" height="24" role="img" aria-label="Danger:"><use xlink:href="#exclamation-triangle-fill"/></svg>
-        <div style="font-size: 22px;">
-        لا يمكن اضافة اقساط للطلب {{ order.id }} لانه طلب مغلق بالفعل
-        </div>
-        
+<!-- Order Payment Status -->
+{% if not order.is_fully_paid %}
+<div class="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
+  <div class="flex items-center">
+    <i class="fa-solid fa-check-circle text-green-500 text-2xl ml-3"></i>
+    <div class="text-green-700">
+      <div class="text-lg font-semibold">يوجد أقساط بالفعل</div>
+      <div class="text-sm">الطلبية رقم {{ order.id }} للفرع {{ order.customer.name }} عليها أقساط بقيمة {{ order.rest_money }} ج.م</div>
     </div>
+  </div>
+  <div class="mt-4 text-center">
+    <a href="{% url 'main:coming_change_rest' %}?order_id={{ order.id }}" 
+       class="inline-flex items-center px-4 py-2 bg-primary hover:bg-primary/90 text-white font-medium rounded-lg transition-colors">
+      <i class="fa-solid fa-credit-card ml-2"></i>
+      يمكنك الدفع من هنا
+    </a>
+  </div>
+</div>
+{% else %}
+<!-- Add Installment Form -->
+<div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+  <div class="flex items-center">
+    <i class="fa-solid fa-info-circle text-blue-500 text-2xl ml-3"></i>
+    <div class="text-blue-700">
+      <div class="text-lg font-semibold">إضافة قسط جديد</div>
+      <div class="text-sm">أنت على وشك إضافة قسط للطلبية رقم {{ order.id }} للفرع {{ order.customer.name }}</div>
+    </div>
+  </div>
+</div>
 
+<!-- Add Installment Form Card -->
+<div class="max-w-md mx-auto">
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+    <div class="p-6">
+      <div class="text-center mb-6">
+        <h1 class="text-2xl font-semibold text-gray-900 mb-2">{{ order.customer.name }}</h1>
+        <div class="w-16 h-0.5 bg-primary mx-auto"></div>
+        <h2 class="text-xl font-medium text-gray-700 mt-4">الطلبية #{{ order.id }}</h2>
+        <div class="w-16 h-0.5 bg-primary mx-auto mt-2"></div>
+        <h3 class="text-lg font-medium text-gray-600 mt-4">الإجمالي: {{ order.total_order_price }} ج.م</h3>
+        <div class="w-16 h-0.5 bg-primary mx-auto mt-2"></div>
+      </div>
+
+      <form action="{% url 'main:coming_put_rest' %}?order_id={{ order.id }}" method="post">
+        {% csrf_token %}
+        
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 mb-2">قيمة القسط</label>
+          <input 
+            type="number" 
+            name="rest_money" 
+            min="0" 
+            max="{{ order.total_order_price }}" 
+            required
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-center text-lg"
+            placeholder="أدخل قيمة القسط"
+          >
+          <p class="text-xs text-gray-500 mt-1">الحد الأقصى: {{ order.total_order_price }} ج.م</p>
+        </div>
+
+        <div class="flex justify-center">
+          <button 
+            type="submit" 
+            class="bg-primary hover:bg-primary/90 text-white font-medium py-3 px-8 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+          >
+            <i class="fa-solid fa-plus ml-2"></i>
+            إضافة القسط
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 {% endif %}
-{%endblock%}
+{% else %}
+<!-- Order Closed Alert -->
+<div class="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
+  <div class="flex items-center">
+    <i class="fa-solid fa-exclamation-triangle text-red-500 text-2xl ml-3"></i>
+    <div class="text-red-700">
+      <div class="text-lg font-semibold">لا يمكن إضافة أقساط</div>
+      <div class="text-sm">لا يمكن إضافة أقساط للطلبية {{ order.id }} لأنها مغلقة بالفعل</div>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

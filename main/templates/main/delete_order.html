@@ -1,27 +1,99 @@
 {% extends "main/layout.html" %}
+{% load static %}
 
 {% block body %}
-<nav style="--bs-breadcrumb-divider: '<';" aria-label="breadcrumb">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item active" aria-current="page">تاكيد حذف الطلب </li>
-      <li class="breadcrumb-item"><a href="{% url 'main:order_info' order.id %}">{{ order.id }} الطلب رقم</a></li>
-      <li class="breadcrumb-item"><a href="{% url 'main:user' order.customer.id %}">{{ order.customer.name }} </a></li>
-      <li class="breadcrumb-item"><a href="{% url 'main:users' %}">العملاء والطلبات</a></li>
-    </ol>
-  </nav>
-  
-    <div class="error">
+<!-- Breadcrumb -->
+<nav class="flex mb-6" aria-label="Breadcrumb">
+  <ol class="inline-flex items-center space-x-1 space-x-reverse md:space-x-2 md:space-x-reverse">
+    <li class="inline-flex items-center">
+      <a href="{% url 'main:users' %}" class="text-sm font-medium text-gray-700 hover:text-primary">العملاء والطلبات</a>
+    </li>
+    <li>
+      <div class="flex items-center">
+        <i class="fa-solid fa-chevron-left text-gray-400 mx-1"></i>
+        <a href="{% url 'main:user' order.customer.id %}" class="ml-1 text-sm font-medium text-gray-700 hover:text-primary md:ml-2">{{ order.customer.name }}</a>
+      </div>
+    </li>
+    <li>
+      <div class="flex items-center">
+        <i class="fa-solid fa-chevron-left text-gray-400 mx-1"></i>
+        <a href="{% url 'main:order_info' order.id %}" class="ml-1 text-sm font-medium text-gray-700 hover:text-primary md:ml-2">الطلب رقم {{ order.id }}</a>
+      </div>
+    </li>
+    <li>
+      <div class="flex items-center">
+        <i class="fa-solid fa-chevron-left text-gray-400 mx-1"></i>
+        <span class="ml-1 text-sm font-medium text-primary md:ml-2">تأكيد حذف الطلب</span>
+      </div>
+    </li>
+  </ol>
+</nav>
 
-        <h1>برجاء تاكيد حذف الطلب رقم 
-            <a href="{% url 'main:order_info' order.id %}" class="red">{{ order.id }}</a>
-        </h1>
-        <a href="{% url 'main:user' order.customer.id %}" class="submit_button" style="margin-bottom: 10px;">{{ order.customer.name }} للعميل </a>
-
-
-        <form action="{% url 'main:delete_order' order.id %}" method="post">
-            {% csrf_token %}
-            <input type="submit" class="submit_button btn btn-outline-danger" style="background-color: white; color: #ea433b;" value="حذف">
+<!-- Confirmation Card -->
+<div class="max-w-2xl mx-auto">
+  <div class="bg-white rounded-lg shadow-lg border border-red-200">
+    <div class="p-8 text-center">
+      <!-- Warning Icon -->
+      <div class="mb-6">
+        <i class="fa-solid fa-exclamation-triangle text-6xl text-red-500"></i>
+      </div>
+      
+      <!-- Warning Message -->
+      <h1 class="text-3xl font-bold text-gray-900 mb-4">تأكيد حذف الطلب</h1>
+      <p class="text-lg text-gray-600 mb-6">
+        هل أنت متأكد من حذف الطلب رقم 
+        <a href="{% url 'main:order_info' order.id %}" class="text-primary hover:text-primary/80 font-bold text-xl">{{ order.id }}</a>
+        ؟
+      </p>
+      
+      <!-- Order Details -->
+      <div class="bg-gray-50 rounded-lg p-6 mb-8">
+        <div class="flex items-center justify-center mb-4">
+          <i class="fa-solid fa-user text-primary ml-2"></i>
+          <span class="text-lg font-semibold text-gray-900">للعميل: {{ order.customer.name }}</span>
+        </div>
+        <div class="text-sm text-gray-600">
+          <p>إجمالي الطلب: <span class="font-semibold">{{ order.total_order_price }} ج.م</span></p>
+          <p>تاريخ الإنشاء: <span class="font-semibold">{{ order.created_at|date:"d/m/Y H:i" }}</span></p>
+        </div>
+      </div>
+      
+      <!-- Warning Notice -->
+      <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
+        <div class="flex items-start">
+          <i class="fa-solid fa-info-circle text-red-500 text-xl ml-3 mt-1"></i>
+          <div class="text-right">
+            <h3 class="font-semibold text-red-800 mb-2">تحذير مهم</h3>
+            <p class="text-red-700 text-sm">
+              هذا الإجراء لا يمكن التراجع عنه. سيتم حذف الطلب وجميع العناصر المرتبطة به نهائياً من النظام.
+            </p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Action Buttons -->
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <form action="{% url 'main:delete_order' order.id %}" method="post" class="flex-1">
+          {% csrf_token %}
+          <button 
+            type="submit" 
+            class="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-6 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+            onclick="return confirm('هل أنت متأكد تماماً من حذف هذا الطلب؟')"
+          >
+            <i class="fa-solid fa-trash ml-2"></i>
+            حذف الطلب نهائياً
+          </button>
         </form>
+        
+        <a 
+          href="{% url 'main:order_info' order.id %}" 
+          class="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-medium py-3 px-6 rounded-lg transition-colors text-center focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+        >
+          <i class="fa-solid fa-arrow-right ml-2"></i>
+          إلغاء والعودة للطلب
+        </a>
+      </div>
     </div>
-
-{%endblock%}
+  </div>
+</div>
+{% endblock %}

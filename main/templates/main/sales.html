@@ -1,318 +1,371 @@
-{% extends "main/stander_layout.html" %}
+{% extends "main/layout.html" %}
 {% load static %}
 
-{% block option %}
-<a href="{% url 'main:users' %}" class="page_option_buttton" >العملاء والطلبات</a>
-<a href="{% url 'main:make_order' %}" class="page_option_buttton">الصفحة الرئيسية</a>
-<a href="{% url 'main:total_orders' %}" class="page_option_buttton" style="box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.25);">المبيعات</a>
-{% endblock %}
-
 {% block body %}
-    <nav style="--bs-breadcrumb-divider: '<';" aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item active" aria-current="page"> المبيعات</li>
-        </ol>
-    </nav>
+<!-- Breadcrumb -->
+<nav class="flex mb-6" aria-label="Breadcrumb">
+  <ol class="inline-flex items-center space-x-1 space-x-reverse md:space-x-2 md:space-x-reverse">
+    <li class="inline-flex items-center">
+      <span class="text-sm font-medium text-primary">المبيعات</span>
+    </li>
+  </ol>
+</nav>
 
-<!-- Main Line Chart -->
-<div style="margin-top: 20px;">
-    <canvas id="mainSalesChart" style="height: 450px;"></canvas>
-</div><br>
-<div style="display: flex; justify-content:center; text-align: right; font-size: 20px; ">
-    <div class="card border-info mb-3" style="width: 87% ;background-color: white; padding-left: 0;">
-        <div class="card-body" style=" display: grid; grid-template-columns: auto auto; padding-left: 0;">
-            <div>
-                <canvas id="donutChart" style="height: 250px; width: 250px;"></canvas>
-            </div>
-            <div style="font-family: Roboto arial;">
-
-                <h5 class="card-title">&#8659; اجمالي المبيعات</h5>
-                <p class="card-text  money" style="padding-right: 12%">{{ all_data.orders_sales }}</p>
-                
-                <h5 class="card-title">&#8659; متوسط سعر الطلب</h5>
-                <p class="card-text  money" style="padding-right: 14%">{{ all_data.average_order }}</p>
-                
-                <h5 class="card-title">&#8659; اجمالي عدد الطلبات</h5>
-                <p class="card-text  money" style="padding-right: 15%">{{ all_data.order_count }}</p>
-                
-                <h5 class="card-title">&#8659; اجمالي ربح</h5>
-                <p class="card-text  money" style="padding-right: 6%">{{ all_data.total_profit }}</p>
-                
-                <h5 class="card-title">&#8659; الرصيد الآجل</h5>
-                <p class="card-text  money" style="padding-right: 5%">{{ all_data.rest_money }}</p>
-            </div>
-        </div>
+<!-- Main Sales Chart -->
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-8">
+  <div class="p-6">
+    <h2 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+      <i class="fa-solid fa-chart-line text-primary ml-2"></i>
+      المبيعات الكلية
+    </h2>
+    <div class="h-96">
+      <canvas id="mainSalesChart"></canvas>
     </div>
+  </div>
 </div>
 
+<!-- Summary Cards -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+  <!-- Donut Chart -->
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+    <div class="p-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4 text-center">إجمالي الربح والرصيد الآجل</h3>
+      <div class="h-64 flex items-center justify-center">
+        <canvas id="donutChart" class="max-w-xs"></canvas>
+      </div>
+    </div>
+  </div>
 
+  <!-- Summary Statistics -->
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+    <div class="p-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-6">إحصائيات عامة</h3>
+      <div class="space-y-6">
+        <div class="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+          <div>
+            <h4 class="text-sm font-medium text-blue-900">إجمالي المبيعات</h4>
+            <p class="text-2xl font-bold text-blue-600 money">{{ all_data.orders_sales }}</p>
+          </div>
+          <i class="fa-solid fa-chart-line text-blue-500 text-2xl"></i>
+        </div>
 
-<div class="accordion" id="accordionPanelsStayOpenExample">
-    {% for year, months_info in years_info.items %}
-    <div class="accordion-item" >
-        <h2 class="accordion-header" id="panelsStayOpen-heading{{ year }}">
-            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapse{{ year }}" aria-expanded="false" aria-controls="panelsStayOpen-collapse{{ year }}">
-                {{ year }}
-            </button>
-        </h2>
-        <div id="panelsStayOpen-collapse{{ year }}" class="accordion-collapse collapse" aria-labelledby="panelsStayOpen-heading{{ year }}">
-            <h1 style="text-align: center; margin-top: 30px; margin-bottom: 30px; ">
-                <i class="fa-solid fa-chart-line fa-flip-horizontal" style="color: #003ca3;"></i>
-                 خلال سنة {{ year }}
-            </h1>
-            <div class="accordion-body" style="display: grid; grid-template-columns: 70% 23%; column-gap: 7%;">
-                <div>
-                    <!-- Chart will be rendered here -->
-                    <canvas id="salesChart{{ year }}"></canvas>
-                </div> 
+        <div class="flex items-center justify-between p-4 bg-green-50 rounded-lg">
+          <div>
+            <h4 class="text-sm font-medium text-green-900">متوسط سعر الطلب</h4>
+            <p class="text-2xl font-bold text-green-600 money">{{ all_data.average_order }}</p>
+          </div>
+          <i class="fa-solid fa-calculator text-green-500 text-2xl"></i>
+        </div>
 
-                <div>
-                    <ul class="list-group list-group-flush" style="text-align: right; font-family: Roboto arial; font-size: 19px;">
-                        <li class="list-group-item  ">{{ months_info.order_count }}  عدد الطلبات </li>
-                        <li class="list-group-item"></li>
-                        <br>
+        <div class="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
+          <div>
+            <h4 class="text-sm font-medium text-purple-900">إجمالي عدد الطلبات</h4>
+            <p class="text-2xl font-bold text-purple-600">{{ all_data.order_count }}</p>
+          </div>
+          <i class="fa-solid fa-shopping-cart text-purple-500 text-2xl"></i>
+        </div>
 
-                        <li class="list-group-item  ">{{ months_info.orders_sales }}  اجمالي مبيعات </li>
-                        <li class="list-group-item"></li>
-                        <br>
+        <div class="flex items-center justify-between p-4 bg-yellow-50 rounded-lg">
+          <div>
+            <h4 class="text-sm font-medium text-yellow-900">إجمالي ربح</h4>
+            <p class="text-2xl font-bold text-yellow-600 money">{{ all_data.total_profit }}</p>
+          </div>
+          <i class="fa-solid fa-coins text-yellow-500 text-2xl"></i>
+        </div>
 
-                        <li class="list-group-item  ">{{ months_info.average_order }}  متوسط سعر الطلب</li>
-                        <li class="list-group-item"></li>
-                        <br>
+        <div class="flex items-center justify-between p-4 bg-red-50 rounded-lg">
+          <div>
+            <h4 class="text-sm font-medium text-red-900">الرصيد الآجل</h4>
+            <p class="text-2xl font-bold text-red-600 money">{{ all_data.rest_money }}</p>
+          </div>
+          <i class="fa-solid fa-clock text-red-500 text-2xl"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-                        <li class="list-group-item  ">{{ months_info.debt }} اجمالي الآجل من المبيعات </li>
-                        <li class="list-group-item"></li>
-                        <br>
-
-                        <li class="list-group-item  ">{{ months_info.profit }}  اجمالي الربح من المبيعات </li>
-                        <li class="list-group-item"></li>
-                        <br>
-
-                        <li class="list-group-item  ">{{ months_info.coming_sales }}  اجمالي سعر الطلبيات</li>
-                        <li class="list-group-item"></li>
-                        <br>
-
-                        <li class="list-group-item  ">{{ months_info.coming_debt }}   اجمالي آجل للطلبيات</li>
-                        <li class="list-group-item"> </li>
-                        <li class="list-group-item"> </li>
-                    </ul>
-                </div>
-            </div>
-            <div class="months_link_div">
-
-                <h2 style="text-align: center"> تفاصيل الشهور</h2>
-                <ul class="months_link_list">
-                {% for month in months_info.months %}
-                    <li>
-                        <a href="{% url 'main:month_sales' %}?m={{month}}&y={{year}}">{{ month }}</a>
-                    </li>
-                {% endfor %}
-                </ul>
-                
-            </div>
+<!-- Years Accordion -->
+<div class="space-y-4">
+  {% for year, months_info in years_info.items %}
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+    <button 
+      class="w-full p-6 text-right flex items-center justify-between hover:bg-gray-50 transition-colors"
+      onclick="toggleYear('year-{{ year }}')"
+    >
+      <div class="flex items-center">
+        <i class="fa-solid fa-calendar text-primary ml-2"></i>
+        <span class="text-xl font-semibold text-gray-900">سنة {{ year }}</span>
+      </div>
+      <i class="fa-solid fa-chevron-down transition-transform duration-200" id="icon-year-{{ year }}"></i>
+    </button>
     
+    <div id="year-{{ year }}" class="hidden border-t border-gray-200">
+      <div class="p-6">
+        <h3 class="text-2xl font-bold text-center text-primary mb-8 flex items-center justify-center">
+          <i class="fa-solid fa-chart-line ml-2"></i>
+          خلال سنة {{ year }}
+        </h3>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <!-- Chart -->
+          <div class="lg:col-span-2">
+            <div class="h-80">
+              <canvas id="salesChart{{ year }}"></canvas>
+            </div>
+          </div>
+          
+          <!-- Statistics -->
+          <div class="space-y-4">
+            <div class="bg-gray-50 rounded-lg p-4">
+              <h4 class="text-lg font-semibold text-gray-900 mb-4">إحصائيات السنة</h4>
+              <div class="space-y-3">
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-600">عدد الطلبات</span>
+                  <span class="font-semibold text-gray-900">{{ months_info.order_count }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-600">إجمالي مبيعات</span>
+                  <span class="font-semibold text-gray-900 money">{{ months_info.orders_sales }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-600">متوسط سعر الطلب</span>
+                  <span class="font-semibold text-gray-900 money">{{ months_info.average_order }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-600">الآجل من المبيعات</span>
+                  <span class="font-semibold text-red-600 money">{{ months_info.debt }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-600">الربح من المبيعات</span>
+                  <span class="font-semibold text-green-600 money">{{ months_info.profit }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-600">سعر الطلبيات</span>
+                  <span class="font-semibold text-blue-600 money">{{ months_info.coming_sales }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-600">آجل للطلبيات</span>
+                  <span class="font-semibold text-orange-600 money">{{ months_info.coming_debt }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+        
+        <!-- Monthly Details -->
+        <div class="mt-8">
+          <h4 class="text-xl font-semibold text-gray-900 text-center mb-6">تفاصيل الشهور</h4>
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            {% for month in months_info.months %}
+            <a 
+              href="{% url 'main:month_sales' %}?m={{month}}&y={{year}}" 
+              class="bg-primary hover:bg-primary/90 text-white text-center py-3 px-4 rounded-lg font-medium transition-colors"
+            >
+              {{ month }}
+            </a>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
     </div>
-    {% endfor %}
+  </div>
+  {% endfor %}
 </div>
 
+<!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-
-    ///////////////////////////////// main line /////////////////////////////////
-
-    var ctxMain = document.getElementById('mainSalesChart').getContext('2d');
-    var mainSalesChart = new Chart(ctxMain, {
-        type: 'line',
-        data: {
-            labels: [{% for year, sales in all_data.years_sales.items %}"{{ year }}", {% endfor %}],
-            datasets: [{
-                label: 'الربح',
-                backgroundColor: 'rgba(46, 204, 113, 0.2)',
-                borderColor: 'rgb(46, 204, 113)',
-                borderWidth: 2,
-                pointRadius: 5,
-                pointBackgroundColor: 'rgb(46, 204, 113)',
-                data: [{% for year, profit in all_data.years_profit.items %}{{ profit }}, {% endfor %}],
-                hidden: false
-            }, {
-                label: 'متوسط سعر الطلب',
-                backgroundColor: 'rgba(52, 73, 94, 0.2)',
-                borderColor: 'rgb(52, 73, 94)',
-                borderWidth: 2,
-                pointRadius: 5,
-                pointBackgroundColor: 'rgb(52, 73, 94)',
-                data: [{% for year, avg in all_data.years_averages.items %}{{ avg }}, {% endfor %}],
-                hidden: false
-            }, {
-                label: 'المبيعات',
-                backgroundColor: 'rgba(93, 173, 226, 0.2)',
-                borderColor: 'rgb(93, 173, 226)',
-                borderWidth: 2,
-                pointRadius: 5,
-                pointBackgroundColor: 'rgb(93, 173, 226)',
-                data: [{% for year, sales in all_data.years_sales.items %}{{ sales }}, {% endfor %}],
-                hidden: false
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(value, index, values) {
-                            return 'EGP' + value; // Add currency symbol
-                        }
-                    }
-                }
-            },
-            responsive: true,
-            maintainAspectRatio: false, // Ensure the chart maintains aspect ratio while resizing
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'المبيعات الكلية', // Chart title
-                    font: {
-                        size: 20,
-                        weight: 'bold'
-                    }
-                },
-                legend: {
-                    display: true,
-                    labels: {
-                        font: {
-                            size: 16
-                        }
-                    },
-                }
+document.addEventListener('DOMContentLoaded', function() {
+  // Main Line Chart
+  var ctxMain = document.getElementById('mainSalesChart').getContext('2d');
+  var mainSalesChart = new Chart(ctxMain, {
+    type: 'line',
+    data: {
+      labels: [{% for year, sales in all_data.years_sales.items %}"{{ year }}", {% endfor %}],
+      datasets: [{
+        label: 'الربح',
+        backgroundColor: 'rgba(46, 204, 113, 0.2)',
+        borderColor: 'rgb(46, 204, 113)',
+        borderWidth: 2,
+        pointRadius: 5,
+        pointBackgroundColor: 'rgb(46, 204, 113)',
+        data: [{% for year, profit in all_data.years_profit.items %}{{ profit }}, {% endfor %}],
+        hidden: false
+      }, {
+        label: 'متوسط سعر الطلب',
+        backgroundColor: 'rgba(52, 73, 94, 0.2)',
+        borderColor: 'rgb(52, 73, 94)',
+        borderWidth: 2,
+        pointRadius: 5,
+        pointBackgroundColor: 'rgb(52, 73, 94)',
+        data: [{% for year, avg in all_data.years_averages.items %}{{ avg }}, {% endfor %}],
+        hidden: false
+      }, {
+        label: 'المبيعات',
+        backgroundColor: 'rgba(93, 173, 226, 0.2)',
+        borderColor: 'rgb(93, 173, 226)',
+        borderWidth: 2,
+        pointRadius: 5,
+        pointBackgroundColor: 'rgb(93, 173, 226)',
+        data: [{% for year, sales in all_data.years_sales.items %}{{ sales }}, {% endfor %}],
+        hidden: false
+      }]
+    },
+    options: {
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function(value, index, values) {
+              return 'EGP ' + value;
             }
+          }
         }
-    });
-
-
-    ///////////////////////////////// main donut /////////////////////////////////
-    
-    var ctxDonut = document.getElementById('donutChart').getContext('2d');
-    var donutChart = new Chart(ctxDonut, {
-        type: 'doughnut',
-        data: {
-            labels: ['اجمالي الربح', 'الرصيد الآجل'],
-            datasets: [{
-                label: 'Donut Chart',
-                data: [{{ all_data.total_profit }}, {{ all_data.rest_money }}],
-                backgroundColor: [
-                'rgba(46, 204, 113, 0.3)',
-                'rgba(229, 57, 53, 0.4)'
-                ],
-                borderColor: [
-                'rgba(46, 204, 113, 1)',
-                'rgba(229, 57, 53, 1)'
-                ],
-                borderWidth: 1
-            }]
+      },
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        title: {
+          display: true,
+          text: 'المبيعات الكلية',
+          font: {
+            size: 20,
+            weight: 'bold'
+          }
         },
-        options: {
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'اجمالي الربح و الرصيد الآجل',
-                    font: {
-                        size: 20,
-                        weight: 'bold'
-                    }
-                },
-                legend: {
-                    display: true,
-                    position: 'bottom',
-                    labels: {
-                        font: {
-                            size: 16
-                        }
-                    }
-                }
-            },
-            layout: {
-                padding: {
-                    left: 50,
-                    right: 50,
-                    top: 0,
-                    bottom: 0
-                }
-            },
-            responsive: true,
-            maintainAspectRatio: false
+        legend: {
+          display: true,
+          labels: {
+            font: {
+              size: 16
+            }
+          }
         }
-    });
+      }
+    }
+  });
 
-    ///////////////////////////////// years bars /////////////////////////////////
-
-        {% for year, months_info in years_info.items %}
-        var ctx{{ year }} = document.getElementById('salesChart{{ year }}').getContext('2d');
-        var salesChart{{ year }} = new Chart(ctx{{ year }}, {
-            type: 'bar',
-            data: {
-                labels: [{% for month, data in months_info.months_sales.items %}{{ month }},{% endfor %}],
-                datasets: [{
-                    label: 'مبيعات - {{ year }}',
-                    backgroundColor: [
-                    'rgba(93, 173, 226, 0.4)',
-                    ],
-                    borderColor: [
-                    'rgba(93, 173, 226, 0.9)',
-                    ],
-                    borderWidth: 1,
-                    data: [{% for month, data in months_info.months_sales.items %}{{ data.orders_sales }},{% endfor %}]
-                }]
-            },
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                },
-                responsive: true,
-                maintainAspectRatio: false // Ensure the chart maintains aspect ratio while resizing
+  // Donut Chart
+  var ctxDonut = document.getElementById('donutChart').getContext('2d');
+  var donutChart = new Chart(ctxDonut, {
+    type: 'doughnut',
+    data: {
+      labels: ['إجمالي الربح', 'الرصيد الآجل'],
+      datasets: [{
+        data: [{{ all_data.total_profit }}, {{ all_data.rest_money }}],
+        backgroundColor: [
+          'rgba(46, 204, 113, 0.8)',
+          'rgba(229, 57, 53, 0.8)'
+        ],
+        borderColor: [
+          'rgba(46, 204, 113, 1)',
+          'rgba(229, 57, 53, 1)'
+        ],
+        borderWidth: 2
+      }]
+    },
+    options: {
+      plugins: {
+        title: {
+          display: true,
+          text: 'إجمالي الربح والرصيد الآجل',
+          font: {
+            size: 16,
+            weight: 'bold'
+          }
+        },
+        legend: {
+          display: true,
+          position: 'bottom',
+          labels: {
+            font: {
+              size: 14
             }
-        });
+          }
+        }
+      },
+      responsive: true,
+      maintainAspectRatio: false
+    }
+  });
 
-    {% endfor %}
+  // Year Charts
+  {% for year, months_info in years_info.items %}
+  var ctx{{ year }} = document.getElementById('salesChart{{ year }}').getContext('2d');
+  var salesChart{{ year }} = new Chart(ctx{{ year }}, {
+    type: 'bar',
+    data: {
+      labels: [{% for month, data in months_info.months_sales.items %}{{ month }},{% endfor %}],
+      datasets: [{
+        label: 'مبيعات - {{ year }}',
+        backgroundColor: 'rgba(93, 173, 226, 0.6)',
+        borderColor: 'rgba(93, 173, 226, 0.9)',
+        borderWidth: 1,
+        data: [{% for month, data in months_info.months_sales.items %}{{ data.orders_sales }},{% endfor %}]
+      }]
+    },
+    options: {
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function(value) {
+              return 'EGP ' + value;
+            }
+          }
+        }
+      },
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        title: {
+          display: true,
+          text: 'مبيعات {{ year }}',
+          font: {
+            size: 16,
+            weight: 'bold'
+          }
+        }
+      }
+    }
+  });
+  {% endfor %}
 
+  // Auto-open first year
+  {% if years_list %}
+    toggleYear('year-{{ years_list.0 }}');
+  {% endif %}
 
-    ///////////////////////////////// script /////////////////////////////////
+  // Format money values
+  document.querySelectorAll('.money').forEach(number => {
+    let money = Number(number.innerHTML);
+    if ((money / Math.pow(10, 9)) >= 1) {
+      money = (money / Math.pow(10, 9)).toFixed(2);
+      number.innerHTML = `${money}B`;
+    } else if ((money / Math.pow(10, 6)) >= 1) {
+      money = (money / Math.pow(10, 6)).toFixed(2);
+      number.innerHTML = `${money}M`;
+    } else if ((money / Math.pow(10, 3)) >= 1) {
+      money = (money / Math.pow(10, 3)).toFixed(2);
+      number.innerHTML = `${money}K`;
+    }
+  });
+});
 
-
-
-    });
+function toggleYear(yearId) {
+  const element = document.getElementById(yearId);
+  const icon = document.getElementById('icon-' + yearId);
+  
+  if (element.classList.contains('hidden')) {
+    element.classList.remove('hidden');
+    icon.classList.remove('fa-chevron-down');
+    icon.classList.add('fa-chevron-up');
+  } else {
+    element.classList.add('hidden');
+    icon.classList.remove('fa-chevron-up');
+    icon.classList.add('fa-chevron-down');
+  }
+}
 </script>
-
-
-<script>
-
-    document.querySelectorAll('.accordion-button')[0].click()
-
-    document.querySelectorAll('.money').forEach(number => {
-
-            money = Number(number.innerHTML)
-
-            if ( (money / Math.pow(10, 9)) >= Number(1) ) {
-
-                money = (money / Math.pow(10, 9)).toFixed(2)
-                number.innerHTML = `${money}B`
-            }
-            else if ( (money / Math.pow(10, 6)) >= Number(1) ) {
-
-                money = (money / Math.pow(10, 6)).toFixed(2)
-                number.innerHTML = `${money}M`
-            }
-            else if ( (money / Math.pow(10, 3)) >= Number(1) ) {
-
-                money = (money / Math.pow(10, 3)).toFixed(2)
-                number.innerHTML = `${money}K`
-            }
-    })
-
-
-</script>
-
 {% endblock %}

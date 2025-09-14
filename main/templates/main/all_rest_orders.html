@@ -2,117 +2,182 @@
 {% load static %}
 
 {% block body %}
-
-{% if coming %}
-<nav style="--bs-breadcrumb-divider: '<';" aria-label="breadcrumb">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item active" aria-current="page"> الطلبيات مستحقة الدفع </li>
-      <li class="breadcrumb-item "><a href="{% url 'main:all_rest_orders' %}"> الطلبات الآجلة </a></li>
-      <li class="breadcrumb-item active" aria-current="page">الأضافات</li>
-    </ol>
+<!-- Breadcrumb -->
+<nav class="flex mb-6" aria-label="Breadcrumb">
+  <ol class="inline-flex items-center space-x-1 space-x-reverse md:space-x-2 md:space-x-reverse">
+    <li class="inline-flex items-center">
+      <span class="text-sm font-medium text-primary">الأضافات</span>
+    </li>
+    <li>
+      <div class="flex items-center">
+        <i class="fa-solid fa-chevron-left text-gray-400 mx-1"></i>
+        {% if coming %}
+          <a href="{% url 'main:all_rest_orders' %}" class="ml-1 text-sm font-medium text-gray-700 hover:text-primary md:ml-2">الطلبات الآجلة</a>
+        {% else %}
+          <a href="{% url 'main:all_rest_coming_orders' %}" class="ml-1 text-sm font-medium text-gray-700 hover:text-primary md:ml-2">الطلبيات مستحقة الدفع</a>
+        {% endif %}
+      </div>
+    </li>
+    <li>
+      <div class="flex items-center">
+        <i class="fa-solid fa-chevron-left text-gray-400 mx-1"></i>
+        <span class="ml-1 text-sm font-medium text-primary md:ml-2">
+          {% if coming %}
+            الطلبيات مستحقة الدفع
+          {% else %}
+            الطلبات الآجلة
+          {% endif %}
+        </span>
+      </div>
+    </li>
+  </ol>
 </nav>
 
-{% else %}
-<nav style="--bs-breadcrumb-divider: '<';" aria-label="breadcrumb">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item "><a href="{% url 'main:all_rest_coming_orders' %}"> الطلبيات مستحقة الدفع </a></li>
-      <li class="breadcrumb-item active" aria-current="page">الطلبات الآجلة </li>
-      <li class="breadcrumb-item active" aria-current="page">الأضافات</li>
-    </ol>
-</nav>
-{% endif %}
+<!-- Header -->
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+  <div class="p-6">
+    <h1 class="text-2xl font-semibold text-gray-900 flex items-center">
+      <i class="fa-solid fa-clock text-primary ml-2"></i>
+      {% if coming %}
+        الطلبيات مستحقة الدفع
+      {% else %}
+        الطلبات الآجلة
+      {% endif %}
+    </h1>
+    <p class="text-gray-600 mt-2">
+      {% if coming %}
+        عرض جميع الطلبيات التي لم يتم دفعها بالكامل
+      {% else %}
+        عرض جميع الطلبات التي لم يتم دفعها بالكامل
+      {% endif %}
+    </p>
+  </div>
+</div>
 
-<table class="table caption-top table-bordered border-info" id="user_orders_table">
-
-    <thead class="table-light">
-        <tr>
-        <th class="table_left" scope="col" style="border-left-color: rgb(185, 185, 185);">#</th>
-        <th class="table_mid_left" scope="col">المتبقي</th>
-        <th class="table_mid_right" scope="col">السعر</th>
-        <th class="table_right" scope="col">التوقيت</th>
-        <th class="table_right" scope="col">المورد</th>
-        </tr>
-    </thead>
-    {% for customer, orders in orders.items %}
-
-        <tr>
-            <td style="border-style: none;"colspan="5">&nbsp;</td>
-        </tr>
-        
-        <tr data-code="customer_{{customer.id}}" class="year">
-            <td colspan="5" style="text-align: center; font-weight: bold; border-style: none;">
-                <span class="toggle-icon" data-toggle="customer_{{customer.id}}">
-                    <i class="fas fa-eye"></i> <!-- Font Awesome eye icon for visibility -->
-                </span>
-        
-            {{ customer.name }}
-            </td>
-        </tr> 
-                
-        <tbody id="customer_{{customer.id}}">
-
+<!-- Orders by Customer -->
+<div class="space-y-4">
+  {% for customer, orders in orders.items %}
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+    <!-- Customer Header -->
+    <button 
+      class="w-full p-6 text-right flex items-center justify-between hover:bg-gray-50 transition-colors"
+      onclick="toggleCustomer('customer-{{ customer.id }}')"
+    >
+      <div class="flex items-center">
+        {% if customer.is_shop %}
+          <i class="fa-solid fa-store text-blue-500 ml-2"></i>
+        {% elif customer.is_supplier %}
+          <i class="fa-solid fa-truck text-green-500 ml-2"></i>
+        {% else %}
+          <i class="fa-solid fa-user text-gray-500 ml-2"></i>
+        {% endif %}
+        <span class="text-xl font-semibold text-gray-900">{{ customer.name }}</span>
+        <span class="mr-4 px-3 py-1 bg-red-100 text-red-800 text-sm font-medium rounded-full">
+          {{ orders|length }} طلب آجل
+        </span>
+      </div>
+      <i class="fa-solid fa-eye transition-transform duration-200" id="icon-customer-{{ customer.id }}"></i>
+    </button>
+    
+    <!-- Orders Table -->
+    <div id="customer-{{ customer.id }}" class="hidden border-t border-gray-200">
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المورد</th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">السعر</th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المتبقي</th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">التوقيت</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
             {% for order in orders %}
-                
-                <tr>
-                    <th scope="row" class="table_left container_order_id_link" style="border-left-color: rgb(0, 238, 255);">
-                        {% if coming %}
-                        <a class="submit_button order_id_link " href={% url 'main:coming_order_info' order.id %}>{{ order.id }}</a>
-                        {% else %}
-                        <a class="submit_button order_id_link " href={% url 'main:order_info' order.id %}>{{ order.id }}</a>
-                        {% endif %}
-                    </th>
-                    <td class="table_mid_right">{{ order.rest_money }}$ باقي </td>
-                    <td class="table_mid_left">{{ order.total_order_price }}$</td>
-
-
-                    <td class="table_right">{{ order.created_at|date:"d/m/Y" }}</td>
-
-                    <td class="table_right">{{ order.supplier.name }}</td>
-                </tr>
-        
-            {%endfor%} 
-
-        </tbody>
-
-    {%endfor%}
-
-</table>
+            <tr class="hover:bg-gray-50 transition-colors">
+              <td class="px-6 py-4 whitespace-nowrap">
+                {% if coming %}
+                  <a 
+                    href="{% url 'main:coming_order_info' order.id %}" 
+                    class="text-primary hover:text-primary/80 font-medium"
+                  >
+                    #{{ order.id }}
+                  </a>
+                {% else %}
+                  <a 
+                    href="{% url 'main:order_info' order.id %}" 
+                    class="text-primary hover:text-primary/80 font-medium"
+                  >
+                    #{{ order.id }}
+                  </a>
+                {% endif %}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                  <i class="fa-solid fa-truck text-green-500 ml-2"></i>
+                  <span class="text-sm font-medium text-gray-900">{{ order.supplier.name }}</span>
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                {{ order.total_order_price }} ج.م
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span class="px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">
+                  {{ order.rest_money }} ج.م باقي
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {{ order.created_at|date:"d/m/Y" }}
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="5" class="px-6 py-12 text-center">
+                <div class="text-gray-500">
+                  <i class="fa-solid fa-check-circle text-4xl mb-4"></i>
+                  <p class="text-lg font-medium">جميع الطلبات مدفوعة بالكامل</p>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  {% empty %}
+  <div class="text-center py-12">
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 max-w-md mx-auto">
+      <i class="fa-solid fa-check-circle text-6xl text-green-500 mb-4"></i>
+      <h2 class="text-2xl font-semibold text-gray-900 mb-2">لا توجد طلبات آجلة</h2>
+      <p class="text-gray-600">جميع الطلبات مدفوعة بالكامل</p>
+    </div>
+  </div>
+  {% endfor %}
+</div>
 
 <script>
-    var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
-    var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
-    return new bootstrap.Popover(popoverTriggerEl)
-    })
+document.addEventListener('DOMContentLoaded', function() {
+  // Auto-open first customer
+  const firstCustomer = document.querySelector('[onclick*="customer-"]');
+  if (firstCustomer) {
+    firstCustomer.click();
+  }
+});
 
-</script>
-<script >
-document.querySelectorAll('.year').forEach(customer => {
-    customer.addEventListener('click', hide_customer);
-
-})
-
-
-function hide_customer() {
-    let customer = document.querySelector(`#${this.dataset.code}`)
-    var icon = document.querySelector(`.toggle-icon[data-toggle="${this.dataset.code}"] i`);
-
-    if (customer.style.display === "none") {
-        customer.style.display = "table-row-group";
-        icon.classList.remove("fa-eye-slash");
-        icon.classList.add("fa-eye");
-
-    }
-    else {
-        customer.style.display = "none";
-        customer.scrollIntoView({ behavior: 'smooth' });
-
-        icon.classList.remove("fa-eye");
-        icon.classList.add("fa-eye-slash");
-
-    }
-
+function toggleCustomer(customerId) {
+  const element = document.getElementById(customerId);
+  const icon = document.getElementById('icon-' + customerId);
+  
+  if (element.classList.contains('hidden')) {
+    element.classList.remove('hidden');
+    icon.classList.remove('fa-eye');
+    icon.classList.add('fa-eye-slash');
+  } else {
+    element.classList.add('hidden');
+    icon.classList.remove('fa-eye-slash');
+    icon.classList.add('fa-eye');
+  }
 }
-
 </script>
-
 {% endblock %}

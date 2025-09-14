@@ -2,141 +2,229 @@
 {% load static %}
 
 {% block body %}
-<nav style="--bs-breadcrumb-divider: '<';" aria-label="breadcrumb">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item active" aria-current="page"> طلبيات الفرع </li>
-        <li class="breadcrumb-item"><a href="{% url 'main:user' store.id %}">{{ store.name }} </a></li>
-        <li class="breadcrumb-item"><a href="{% url 'main:users' %}">العملاء والطلبات</a></li>
-    </ol>
+<!-- Breadcrumb -->
+<nav class="flex mb-6" aria-label="Breadcrumb">
+  <ol class="inline-flex items-center space-x-1 space-x-reverse md:space-x-2 md:space-x-reverse">
+    <li class="inline-flex items-center">
+      <a href="{% url 'main:users' %}" class="text-sm font-medium text-gray-700 hover:text-primary">العملاء والطلبات</a>
+    </li>
+    <li>
+      <div class="flex items-center">
+        <i class="fa-solid fa-chevron-left text-gray-400 mx-1"></i>
+        <a href="{% url 'main:user' store.id %}" class="ml-1 text-sm font-medium text-gray-700 hover:text-primary md:ml-2">{{ store.name }}</a>
+      </div>
+    </li>
+    <li>
+      <div class="flex items-center">
+        <i class="fa-solid fa-chevron-left text-gray-400 mx-1"></i>
+        <span class="ml-1 text-sm font-medium text-primary md:ml-2">طلبيات الفرع</span>
+      </div>
+    </li>
+  </ol>
 </nav>
 
 {% if not orders %}
-
-    <div class="error">
-    <h1>لا يوجد اي طلبيات للفرع</h1>
-    <h2>{{ store.name }}</h2>
-    </div>
+<!-- No Orders State -->
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
+  <i class="fa-solid fa-truck text-6xl text-gray-300 mb-4"></i>
+  <h1 class="text-2xl font-semibold text-gray-900 mb-2">لا يوجد أي طلبيات للفرع</h1>
+  <h2 class="text-lg text-gray-600">{{ store.name }}</h2>
+</div>
 {% else %}
-  
+<!-- Progress Bar -->
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+  <div class="flex items-center justify-between mb-2">
+    <span class="text-sm font-medium text-gray-700">نسبة الإنجاز</span>
+    <span class="text-sm font-medium text-primary">{{ percent }}%</span>
+  </div>
+  <div class="w-full bg-gray-200 rounded-full h-2">
+    <div class="bg-primary h-2 rounded-full transition-all duration-300" style="width: {{ percent }}%"></div>
+  </div>
+</div>
 
-    <div class="progress">
-        <div id="percent" class="progress-bar progress-bar-striped progress-bar-animated " role="progressbar" data-percent={{ percent }} aria-valuenow={{ percent }} aria-valuemin="0" aria-valuemax="100" style="width: {{percent}}%">{{percent}}%</div>
+<!-- Orders Table -->
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+  <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+    <div class="flex items-center justify-between">
+      <h2 class="text-lg font-semibold text-gray-900">{{ store.name }} - طلبيات الفرع</h2>
+      <button 
+        onclick="toggleModal()" 
+        class="text-primary hover:text-primary/80 font-medium text-sm"
+      >
+        <i class="fa-solid fa-chart-bar ml-1"></i>
+        عرض الإحصائيات
+      </button>
     </div>
-    <table class="table caption-top table-bordered border-info" id="user_orders_table">
-        <caption style="text-align: right;" data-bs-toggle="modal" data-bs-target="#exampleModal" data-bs-whatever="@mdo">
-            {{store.name}} طلبيات فرع
-        </caption>
+  </div>
 
-        <thead class="table-light">
-            <tr>
-            <th class="table_left" scope="col" style="border-left-color: rgb(185, 185, 185);">#</th>
-            <th class="table_mid_left" scope="col">السعر</th>
-            <th class="table_mid_right" scope="col">الحالة</th>
-            <th class="table_right" scope="col">يوم</th>
-            </tr>
-        </thead>
+  <div class="overflow-x-auto">
+    <table class="min-w-full divide-y divide-gray-200" id="user_orders_table">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">السعر</th>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الحالة</th>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">اليوم</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
         {% for year, months in arranged_orders.items %}
-
-            <tr>
-                <td style="border-style: none;"colspan="4">&nbsp;</td>
-            </tr>
-            
-            <tr data-code="year_{{year}}" class="year">
-                <td colspan="4" style="text-align: center; font-weight: bold; border-style: none;">
-                    <span class="toggle-icon" data-toggle="year_{{year}}">
-                        <i class="fas fa-eye"></i> 
-                    </span>
-            
-                    السنة -- 20{{ year }}
+        <!-- Year Header -->
+        <tr class="bg-gray-100">
+          <td colspan="4" class="px-6 py-4 text-center">
+            <button 
+              onclick="toggleYear('year_{{ year }}')" 
+              class="flex items-center justify-center w-full text-lg font-semibold text-gray-900 hover:text-primary transition-colors"
+            >
+              <i class="fa-solid fa-eye ml-2 toggle-icon" data-toggle="year_{{ year }}"></i>
+              السنة -- 20{{ year }}
+            </button>
+          </td>
+        </tr>
+        
+        <!-- Year Content -->
+        <tbody id="year_{{ year }}" class="hidden">
+          {% for month, days in months.items %}
+          <!-- Month Header -->
+          <tr class="bg-gray-50">
+            <td colspan="4" class="px-6 py-3">
+              <button 
+                onclick="toggleMonth('month_{{ year }}{{ month }}')" 
+                class="flex items-center text-sm font-medium text-gray-700 hover:text-primary transition-colors"
+              >
+                <i class="fa-solid fa-angle-down ml-2 toggle-icon" data-toggle="month_{{ year }}{{ month }}"></i>
+                {{ month|add:0 }}
+              </button>
+            </td>
+          </tr>
+          
+          <!-- Month Content -->
+          <tbody id="month_{{ year }}{{ month }}" class="hidden">
+            {% for day, orders in days.items %}
+              {% for order in orders %}
+              <tr class="hover:bg-gray-50 transition-colors">
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-primary">
+                  <a href="{% url 'main:coming_order_info' order.id %}" 
+                     class="hover:text-primary/80 transition-colors">
+                    {{ order.id }}
+                  </a>
                 </td>
-            </tr> 
-                    
-            <tbody id="year_{{year}}">
-
-
-                {% for month, days in months.items %}
-                
-                    <tr class="month" data-code="month_{{year}}{{month}}">
-                        <td colspan="4" style="font-weight: bold; border-style: none;">
-                            <span class="toggle-icon" data-toggle="month_{{year}}{{month}}">
-                                <i class="fa-solid fa-angle-down"></i>
-                            </span>
-
-                            {{ month|add:0 }}
-                        </td>
-                        
-                    </tr> 
-
-                    {% for day, orders in days.items %}
-
-                        {% for order in orders %}
-                            
-                            <tr class="month_{{year}}{{month}}">
-                                <th scope="row" class="table_left container_order_id_link" style="border-left-color: rgb(0, 238, 255);">
-                                    <a class="submit_button order_id_link " href={% url 'main:coming_order_info' order.id %}>{{ order.id }}</a>
-                                </th>
-                                <td class="table_mid_left">{{ order.total_order_price }}</td>
-
-                                {% if  order.is_fully_paid %}
-                                <td class="table_mid_right">مدفوع بالكامل</td>
-                                {% else %}
-                                <td class="table_mid_right">{{ order.rest_money }}$ باقي </td>
-                                {% endif %}
-
-                                <td class="table_right">{{ order.created_at|date:"D" }} -{{ day }}-</td>
-                            </tr>
-                    
-                        {%endfor%} 
-
-                    {%endfor%} 
-
-                {%endfor%} 
-
-            </tbody>
-        {%endfor%}
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {{ order.total_order_price }} ج.م
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  {% if order.is_fully_paid %}
+                    <span class="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
+                      مدفوع بالكامل
+                    </span>
+                  {% else %}
+                    <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">
+                      {{ order.rest_money }} ج.م باقي
+                    </span>
+                  {% endif %}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {{ order.created_at|date:"D" }} -{{ day }}-
+                </td>
+              </tr>
+              {% endfor %}
+            {% endfor %}
+          </tbody>
+          {% endfor %}
+        </tbody>
+        {% endfor %}
+      </tbody>
     </table>
+  </div>
+</div>
 
-
-
-    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="false">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header" >
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="margin: 0;"></button>
-                    <h5 class="modal-title" id="exampleModalLabel">اجمالي عدد الطلبات: {{total_orders_info.count}}</h5>
-                </div>
-                <div class="modal-body" style="text-align: right;">
-                    <h1>اجمالي سعر الطلبيات: {{total_orders_info.total_money}}</h1>
-                    {% if rest_info.count %}
-                    <h1>اجمالي المبلغ المستحق: {{rest_info.rest_money}}</h1>
-                    <h1>&#8664; علي اجمالي {{rest_info.count}} طلبية </h1>
-                    {% for order in rest_info.rest_orders%}
-                    <h3>{{ order.rest_money }} &#8656; <a href="{% url 'main:coming_order_info' order.id %}">{{ order.id }}</a></h3>
-                    {% endfor %}
-                    {% else %}
-                    <h1>اجمالي المبلغ المستحق: 0</h1>
-
-                    {% endif %}
-
-                
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">تم</button>
-                </div>
+<!-- Statistics Modal -->
+<div id="statsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+  <div class="flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+      <div class="flex items-center justify-between p-6 border-b border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900">إحصائيات الطلبيات</h3>
+        <button onclick="toggleModal()" class="text-gray-400 hover:text-gray-600">
+          <i class="fa-solid fa-times text-xl"></i>
+        </button>
+      </div>
+      <div class="p-6">
+        <div class="space-y-4">
+          <div class="text-center">
+            <h4 class="text-2xl font-bold text-primary">اجمالي عدد الطلبيات: {{ total_orders_info.count }}</h4>
+          </div>
+          <div class="text-center">
+            <h4 class="text-xl font-semibold text-gray-700">اجمالي سعر الطلبيات: {{ total_orders_info.total_money }} ج.م</h4>
+          </div>
+          {% if rest_info.count %}
+          <div class="text-center">
+            <h4 class="text-xl font-semibold text-red-600">اجمالي المبلغ المستحق: {{ rest_info.rest_money }} ج.م</h4>
+            <p class="text-sm text-gray-600 mt-1">على اجمالي {{ rest_info.count }} طلبية</p>
+          </div>
+          <div class="space-y-2">
+            {% for order in rest_info.rest_orders %}
+            <div class="flex justify-between items-center p-2 bg-gray-50 rounded">
+              <span class="text-sm text-gray-700">{{ order.rest_money }} ج.م</span>
+              <a href="{% url 'main:coming_order_info' order.id %}" 
+                 class="text-primary hover:text-primary/80 text-sm font-medium">
+                #{{ order.id }}
+              </a>
             </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="text-center">
+            <h4 class="text-xl font-semibold text-green-600">اجمالي المبلغ المستحق: 0 ج.م</h4>
+          </div>
+          {% endif %}
         </div>
-        </div>
-    
-
+      </div>
+      <div class="flex justify-end p-6 border-t border-gray-200">
+        <button onclick="toggleModal()" 
+                class="px-4 py-2 bg-primary hover:bg-primary/90 text-white font-medium rounded-lg transition-colors">
+          تم
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 {% endif %}
 
-<script>
-    var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
-    var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
-    return new bootstrap.Popover(popoverTriggerEl)
-    })
-</script>
 <script src="{% static 'main/table.js' %}"></script>
+<script>
+function toggleModal() {
+  const modal = document.getElementById('statsModal');
+  modal.classList.toggle('hidden');
+}
 
-{%endblock%} 
+function toggleYear(yearId) {
+  const yearContent = document.getElementById(yearId);
+  const icon = document.querySelector(`[data-toggle="${yearId}"]`);
+  
+  if (yearContent.classList.contains('hidden')) {
+    yearContent.classList.remove('hidden');
+    icon.classList.remove('fa-eye');
+    icon.classList.add('fa-eye-slash');
+  } else {
+    yearContent.classList.add('hidden');
+    icon.classList.remove('fa-eye-slash');
+    icon.classList.add('fa-eye');
+  }
+}
 
+function toggleMonth(monthId) {
+  const monthContent = document.getElementById(monthId);
+  const icon = document.querySelector(`[data-toggle="${monthId}"]`);
+  
+  if (monthContent.classList.contains('hidden')) {
+    monthContent.classList.remove('hidden');
+    icon.classList.remove('fa-angle-down');
+    icon.classList.add('fa-angle-up');
+  } else {
+    monthContent.classList.add('hidden');
+    icon.classList.remove('fa-angle-up');
+    icon.classList.add('fa-angle-down');
+  }
+}
+</script>
+{% endblock %}
