@@ -1,0 +1,531 @@
+{% extends "main/layout.html" %}
+{% load static %}
+
+{% block body %}
+<!-- Breadcrumb -->
+<nav class="flex mb-6" aria-label="Breadcrumb">
+  <ol class="inline-flex items-center space-x-1 space-x-reverse md:space-x-2 md:space-x-reverse">
+    <li class="inline-flex items-center">
+      <a href="{% url 'main:make_order' %}" class="text-sm font-medium text-gray-700 hover:text-primary">الصفحة الرئيسية</a>
+    </li>
+    <li>
+      <div class="flex items-center">
+        <i class="fa-solid fa-chevron-left text-gray-400 mx-1"></i>
+        <span class="ml-1 text-sm font-medium text-primary md:ml-2">دليل الاستخدام</span>
+      </div>
+    </li>
+  </ol>
+</nav>
+
+<!-- Header -->
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-8">
+  <div class="p-6 text-center">
+    <h1 class="text-3xl font-bold text-primary flex items-center justify-center">
+      <i class="fa-solid fa-question-circle ml-2"></i>
+      دليل الاستخدام الشامل
+    </h1>
+    <p class="text-gray-600 mt-2">تعلم كيفية استخدام جميع ميزات نظام إدارة المبيعات</p>
+  </div>
+</div>
+
+<!-- Table of Contents -->
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-8">
+  <div class="p-6 border-b border-gray-200">
+    <h2 class="text-xl font-semibold text-gray-900 flex items-center">
+      <i class="fa-solid fa-list text-primary ml-2"></i>
+      فهرس المحتويات
+    </h2>
+  </div>
+  <div class="p-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <a href="#getting-started" class="block p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">
+        <h3 class="font-semibold text-blue-900">البداية السريعة</h3>
+        <p class="text-sm text-blue-700">تعلم الأساسيات</p>
+      </a>
+      <a href="#orders" class="block p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors">
+        <h3 class="font-semibold text-green-900">إدارة الطلبات</h3>
+        <p class="text-sm text-green-700">إنشاء وإدارة الطلبات</p>
+      </a>
+      <a href="#customers" class="block p-4 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors">
+        <h3 class="font-semibold text-purple-900">إدارة العملاء</h3>
+        <p class="text-sm text-purple-700">العملاء والموردين</p>
+      </a>
+      <a href="#products" class="block p-4 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors">
+        <h3 class="font-semibold text-orange-900">إدارة المنتجات</h3>
+        <p class="text-sm text-orange-700">المنتجات والأنواع</p>
+      </a>
+      <a href="#reports" class="block p-4 bg-red-50 hover:bg-red-100 rounded-lg transition-colors">
+        <h3 class="font-semibold text-red-900">التقارير والإحصائيات</h3>
+        <p class="text-sm text-red-700">المبيعات والأرباح</p>
+      </a>
+      <a href="#troubleshooting" class="block p-4 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors">
+        <h3 class="font-semibold text-gray-900">حل المشاكل</h3>
+        <p class="text-sm text-gray-700">المشاكل الشائعة</p>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Getting Started Section -->
+<section id="getting-started" class="mb-12">
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+    <div class="p-6 border-b border-gray-200">
+      <h2 class="text-2xl font-semibold text-gray-900 flex items-center">
+        <i class="fa-solid fa-rocket text-primary ml-2"></i>
+        البداية السريعة
+      </h2>
+    </div>
+    <div class="p-6 space-y-6">
+      <div class="bg-blue-50 p-4 rounded-lg">
+        <h3 class="font-semibold text-blue-900 mb-2">مرحباً بك في نظام إدارة المبيعات</h3>
+        <p class="text-blue-800">هذا النظام مصمم لمساعدتك في إدارة مبيعاتك وعملائك ومنتجاتك بكفاءة عالية.</p>
+      </div>
+      
+      <div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-3">الخطوات الأولى:</h3>
+        <ol class="list-decimal list-inside space-y-2 text-gray-700">
+          <li><strong>إنشاء العملاء:</strong> ابدأ بإنشاء قاعدة بيانات عملائك من قسم "عميل جديد"</li>
+          <li><strong>إضافة المنتجات:</strong> أضف منتجاتك وأنواعها من قسم "إدارة المنتجات"</li>
+          <li><strong>إنشاء الطلبات:</strong> استخدم الصفحة الرئيسية لإنشاء طلبات جديدة</li>
+          <li><strong>متابعة المبيعات:</strong> تابع إحصائياتك من قسم "المبيعات"</li>
+        </ol>
+      </div>
+
+      <div class="bg-yellow-50 p-4 rounded-lg">
+        <h3 class="font-semibold text-yellow-900 mb-2">💡 نصيحة مهمة</h3>
+        <p class="text-yellow-800">استخدم القائمة الجانبية للتنقل السريع بين الأقسام المختلفة. كل قسم له لون مميز لسهولة التمييز.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Orders Management Section -->
+<section id="orders" class="mb-12">
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+    <div class="p-6 border-b border-gray-200">
+      <h2 class="text-2xl font-semibold text-gray-900 flex items-center">
+        <i class="fa-solid fa-shopping-cart text-primary ml-2"></i>
+        إدارة الطلبات
+      </h2>
+    </div>
+    <div class="p-6 space-y-6">
+      
+      <!-- Creating Orders -->
+      <div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-3">إنشاء طلب جديد</h3>
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <h4 class="font-semibold text-gray-800 mb-2">الخطوات:</h4>
+          <ol class="list-decimal list-inside space-y-1 text-gray-700">
+            <li>اختر العميل من القائمة المنسدلة</li>
+            <li>حدد نوع الطلب (سوق أو جملة)</li>
+            <li>اختر المنتجات وأدخل الكميات المطلوبة</li>
+            <li>اضغط "إنشاء الطلب" لحفظ الطلب</li>
+          </ol>
+        </div>
+      </div>
+
+      <!-- Order Types -->
+      <div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-3">أنواع الطلبات</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="bg-green-50 p-4 rounded-lg">
+            <h4 class="font-semibold text-green-900 mb-2">طلبات السوق</h4>
+            <p class="text-green-800 text-sm">تستخدم أسعار السوق للعملاء العاديين</p>
+          </div>
+          <div class="bg-blue-50 p-4 rounded-lg">
+            <h4 class="font-semibold text-blue-900 mb-2">طلبات الجملة</h4>
+            <p class="text-blue-800 text-sm">تستخدم أسعار الجملة للعملاء التجاريين</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Order Management -->
+      <div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-3">إدارة الطلبات الموجودة</h3>
+        <div class="space-y-3">
+          <div class="flex items-start space-x-3 space-x-reverse">
+            <i class="fa-solid fa-edit text-blue-500 mt-1"></i>
+            <div>
+              <h4 class="font-semibold text-gray-800">تعديل الطلب</h4>
+              <p class="text-gray-600 text-sm">اضغط على أيقونة التعديل لتغيير تفاصيل الطلب</p>
+            </div>
+          </div>
+          <div class="flex items-start space-x-3 space-x-reverse">
+            <i class="fa-solid fa-plus text-green-500 mt-1"></i>
+            <div>
+              <h4 class="font-semibold text-gray-800">إضافة منتجات</h4>
+              <p class="text-gray-600 text-sm">يمكنك إضافة منتجات جديدة للطلب بعد إنشائه</p>
+            </div>
+          </div>
+          <div class="flex items-start space-x-3 space-x-reverse">
+            <i class="fa-solid fa-trash text-red-500 mt-1"></i>
+            <div>
+              <h4 class="font-semibold text-gray-800">حذف الطلب</h4>
+              <p class="text-gray-600 text-sm">احذف الطلبات غير المرغوب فيها</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment Management -->
+      <div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-3">إدارة المدفوعات</h3>
+        <div class="bg-yellow-50 p-4 rounded-lg">
+          <h4 class="font-semibold text-yellow-900 mb-2">الدفع الآجل</h4>
+          <p class="text-yellow-800 text-sm">يمكنك تسجيل المدفوعات الجزئية وتتبع المبلغ المتبقي</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Customers Management Section -->
+<section id="customers" class="mb-12">
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+    <div class="p-6 border-b border-gray-200">
+      <h2 class="text-2xl font-semibold text-gray-900 flex items-center">
+        <i class="fa-solid fa-users text-primary ml-2"></i>
+        إدارة العملاء
+      </h2>
+    </div>
+    <div class="p-6 space-y-6">
+      
+      <!-- Customer Types -->
+      <div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-3">أنواع العملاء</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="bg-blue-50 p-4 rounded-lg">
+            <h4 class="font-semibold text-blue-900 mb-2">العملاء العاديين</h4>
+            <p class="text-blue-800 text-sm">عملاء يدفعون أسعار السوق</p>
+          </div>
+          <div class="bg-green-50 p-4 rounded-lg">
+            <h4 class="font-semibold text-green-900 mb-2">العملاء التجاريين</h4>
+            <p class="text-green-800 text-sm">عملاء يدفعون أسعار الجملة</p>
+          </div>
+          <div class="bg-purple-50 p-4 rounded-lg">
+            <h4 class="font-semibold text-purple-900 mb-2">الموردين</h4>
+            <p class="text-purple-800 text-sm">موردين للمنتجات</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Creating Customers -->
+      <div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-3">إضافة عميل جديد</h3>
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <h4 class="font-semibold text-gray-800 mb-2">المعلومات المطلوبة:</h4>
+          <ul class="list-disc list-inside space-y-1 text-gray-700">
+            <li><strong>اسم العميل:</strong> الاسم الكامل للعميل</li>
+            <li><strong>رقم الهاتف:</strong> رقم التواصل مع العميل</li>
+            <li><strong>نوع العميل:</strong> عادي، تجاري، أو مورد</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Customer Management -->
+      <div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-3">إدارة العملاء</h3>
+        <div class="space-y-3">
+          <div class="flex items-start space-x-3 space-x-reverse">
+            <i class="fa-solid fa-search text-blue-500 mt-1"></i>
+            <div>
+              <h4 class="font-semibold text-gray-800">البحث عن العملاء</h4>
+              <p class="text-gray-600 text-sm">استخدم شريط البحث للعثور على العملاء بسرعة</p>
+            </div>
+          </div>
+          <div class="flex items-start space-x-3 space-x-reverse">
+            <i class="fa-solid fa-chart-line text-green-500 mt-1"></i>
+            <div>
+              <h4 class="font-semibold text-gray-800">متابعة الطلبات</h4>
+              <p class="text-gray-600 text-sm">عرض جميع طلبات العميل وتاريخه الشرائي</p>
+            </div>
+          </div>
+          <div class="flex items-start space-x-3 space-x-reverse">
+            <i class="fa-solid fa-money-bill-wave text-yellow-500 mt-1"></i>
+            <div>
+              <h4 class="font-semibold text-gray-800">متابعة المدفوعات</h4>
+              <p class="text-gray-600 text-sm">تتبع المبالغ المدفوعة والمتبقية</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Products Management Section -->
+<section id="products" class="mb-12">
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+    <div class="p-6 border-b border-gray-200">
+      <h2 class="text-2xl font-semibold text-gray-900 flex items-center">
+        <i class="fa-solid fa-box text-primary ml-2"></i>
+        إدارة المنتجات
+      </h2>
+    </div>
+    <div class="p-6 space-y-6">
+      
+      <!-- Categories Management -->
+      <div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-3">إدارة الأنواع</h3>
+        <div class="bg-blue-50 p-4 rounded-lg">
+          <h4 class="font-semibold text-blue-900 mb-2">إنشاء نوع جديد</h4>
+          <p class="text-blue-800 text-sm">ابدأ بإنشاء أنواع المنتجات (مثل: إلكترونيات، ملابس، إلخ)</p>
+        </div>
+        <div class="mt-3 space-y-2">
+          <div class="flex items-center space-x-2 space-x-reverse">
+            <i class="fa-solid fa-check text-green-500"></i>
+            <span class="text-sm text-gray-700">يمكن حذف النوع فقط إذا لم يحتوي على منتجات</span>
+          </div>
+          <div class="flex items-center space-x-2 space-x-reverse">
+            <i class="fa-solid fa-chart-bar text-blue-500"></i>
+            <span class="text-sm text-gray-700">عرض إحصائيات الاستخدام لكل نوع</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Items Management -->
+      <div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-3">إدارة المنتجات</h3>
+        <div class="bg-green-50 p-4 rounded-lg">
+          <h4 class="font-semibold text-green-900 mb-2">إضافة منتج جديد</h4>
+          <p class="text-green-800 text-sm">أضف منتجاتك مع جميع التفاصيل المطلوبة</p>
+        </div>
+        
+        <div class="mt-4">
+          <h4 class="font-semibold text-gray-800 mb-2">المعلومات المطلوبة:</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="space-y-2">
+              <div class="flex items-center space-x-2 space-x-reverse">
+                <i class="fa-solid fa-tag text-blue-500"></i>
+                <span class="text-sm text-gray-700">النوع</span>
+              </div>
+              <div class="flex items-center space-x-2 space-x-reverse">
+                <i class="fa-solid fa-signature text-green-500"></i>
+                <span class="text-sm text-gray-700">اسم المنتج</span>
+              </div>
+              <div class="flex items-center space-x-2 space-x-reverse">
+                <i class="fa-solid fa-dollar-sign text-yellow-500"></i>
+                <span class="text-sm text-gray-700">السعر الحقيقي</span>
+              </div>
+            </div>
+            <div class="space-y-2">
+              <div class="flex items-center space-x-2 space-x-reverse">
+                <i class="fa-solid fa-shopping-cart text-purple-500"></i>
+                <span class="text-sm text-gray-700">سعر الجملة</span>
+              </div>
+              <div class="flex items-center space-x-2 space-x-reverse">
+                <i class="fa-solid fa-store text-red-500"></i>
+                <span class="text-sm text-gray-700">سعر السوق</span>
+              </div>
+              <div class="flex items-center space-x-2 space-x-reverse">
+                <i class="fa-solid fa-boxes text-indigo-500"></i>
+                <span class="text-sm text-gray-700">كمية المخزون</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Safe Deletion -->
+      <div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-3">الحذف الآمن</h3>
+        <div class="bg-red-50 p-4 rounded-lg">
+          <h4 class="font-semibold text-red-900 mb-2">⚠️ مهم جداً</h4>
+          <p class="text-red-800 text-sm">لا يمكن حذف المنتج إذا كان مستخدماً في أي طلب. هذا يضمن عدم فقدان البيانات التاريخية.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Reports Section -->
+<section id="reports" class="mb-12">
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+    <div class="p-6 border-b border-gray-200">
+      <h2 class="text-2xl font-semibold text-gray-900 flex items-center">
+        <i class="fa-solid fa-chart-line text-primary ml-2"></i>
+        التقارير والإحصائيات
+      </h2>
+    </div>
+    <div class="p-6 space-y-6">
+      
+      <!-- Sales Overview -->
+      <div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-3">نظرة عامة على المبيعات</h3>
+        <div class="bg-blue-50 p-4 rounded-lg">
+          <h4 class="font-semibold text-blue-900 mb-2">الصفحة الرئيسية للمبيعات</h4>
+          <p class="text-blue-800 text-sm">عرض إحصائيات شاملة لجميع المبيعات مع الرسوم البيانية</p>
+        </div>
+      </div>
+
+      <!-- Monthly Reports -->
+      <div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-3">التقارير الشهرية</h3>
+        <div class="space-y-3">
+          <div class="flex items-start space-x-3 space-x-reverse">
+            <i class="fa-solid fa-calendar text-green-500 mt-1"></i>
+            <div>
+              <h4 class="font-semibold text-gray-800">تقرير شهر محدد</h4>
+              <p class="text-gray-600 text-sm">عرض تفاصيل المبيعات لشهر معين مع الرسوم البيانية</p>
+            </div>
+          </div>
+          <div class="flex items-start space-x-3 space-x-reverse">
+            <i class="fa-solid fa-chart-pie text-purple-500 mt-1"></i>
+            <div>
+              <h4 class="font-semibold text-gray-800">توزيع الأرباح والديون</h4>
+              <p class="text-gray-600 text-sm">رسوم بيانية توضح الأرباح والديون المتبقية</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Order Lists -->
+      <div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-3">قوائم الطلبات</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="bg-green-50 p-4 rounded-lg">
+            <h4 class="font-semibold text-green-900 mb-2">جميع الطلبات</h4>
+            <p class="text-green-800 text-sm">عرض جميع الطلبات مرتبة حسب التاريخ</p>
+          </div>
+          <div class="bg-yellow-50 p-4 rounded-lg">
+            <h4 class="font-semibold text-yellow-900 mb-2">الطلبات الآجلة</h4>
+            <p class="text-yellow-800 text-sm">الطلبات التي لم يتم دفعها بالكامل</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Troubleshooting Section -->
+<section id="troubleshooting" class="mb-12">
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+    <div class="p-6 border-b border-gray-200">
+      <h2 class="text-2xl font-semibold text-gray-900 flex items-center">
+        <i class="fa-solid fa-wrench text-primary ml-2"></i>
+        حل المشاكل الشائعة
+      </h2>
+    </div>
+    <div class="p-6 space-y-6">
+      
+      <!-- Common Issues -->
+      <div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-3">المشاكل الشائعة</h3>
+        <div class="space-y-4">
+          <div class="bg-red-50 p-4 rounded-lg">
+            <h4 class="font-semibold text-red-900 mb-2">❌ لا يمكن حذف المنتج</h4>
+            <p class="text-red-800 text-sm">السبب: المنتج مستخدم في طلبات سابقة</p>
+            <p class="text-red-800 text-sm">الحل: لا يمكن حذف المنتج لحماية البيانات التاريخية</p>
+          </div>
+          
+          <div class="bg-yellow-50 p-4 rounded-lg">
+            <h4 class="font-semibold text-yellow-900 mb-2">⚠️ لا تظهر الطلبات في التقارير</h4>
+            <p class="text-yellow-800 text-sm">السبب: الطلبات لم يتم حفظها بشكل صحيح</p>
+            <p class="text-yellow-800 text-sm">الحل: تأكد من الضغط على "إنشاء الطلب" بعد إدخال البيانات</p>
+          </div>
+          
+          <div class="bg-blue-50 p-4 rounded-lg">
+            <h4 class="font-semibold text-blue-900 mb-2">ℹ️ لا تظهر الملفات الثابتة</h4>
+            <p class="text-blue-800 text-sm">السبب: مشكلة في إعدادات الملفات الثابتة</p>
+            <p class="text-blue-800 text-sm">الحل: تأكد من تشغيل collectstatic في الإنتاج</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tips -->
+      <div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-3">نصائح مفيدة</h3>
+        <div class="bg-green-50 p-4 rounded-lg">
+          <h4 class="font-semibold text-green-900 mb-2">💡 نصائح للاستخدام الأمثل</h4>
+          <ul class="list-disc list-inside space-y-1 text-green-800 text-sm">
+            <li>احفظ عملك بانتظام لتجنب فقدان البيانات</li>
+            <li>استخدم البحث للعثور على العملاء والطلبات بسرعة</li>
+            <li>راجع التقارير بانتظام لمتابعة أداء المبيعات</li>
+            <li>احتفظ بنسخ احتياطية من قاعدة البيانات</li>
+            <li>استخدم الألوان المختلفة في القائمة للتنقل السريع</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Contact -->
+      <div>
+        <h3 class="text-lg font-semibold text-gray-900 mb-3">الدعم الفني</h3>
+        <div class="bg-gray-50 p-4 rounded-lg">
+          <h4 class="font-semibold text-gray-800 mb-2">في حالة الحاجة للمساعدة</h4>
+          <p class="text-gray-700 text-sm">إذا واجهت مشاكل غير مذكورة هنا، يرجى مراجعة ملفات السجل أو التواصل مع فريق الدعم الفني.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Quick Actions -->
+<div class="bg-gradient-to-r from-primary to-primary/80 rounded-lg shadow-lg p-6 text-white">
+  <h2 class="text-xl font-semibold mb-4 flex items-center">
+    <i class="fa-solid fa-bolt ml-2"></i>
+    إجراءات سريعة
+  </h2>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <a href="{% url 'main:make_order' %}" class="bg-white/20 hover:bg-white/30 p-4 rounded-lg transition-colors">
+      <i class="fa-solid fa-plus-circle text-2xl mb-2"></i>
+      <h3 class="font-semibold">إنشاء طلب جديد</h3>
+      <p class="text-sm opacity-90">ابدأ بإنشاء طلب جديد</p>
+    </a>
+    <a href="{% url 'main:category_management' %}" class="bg-white/20 hover:bg-white/30 p-4 rounded-lg transition-colors">
+      <i class="fa-solid fa-tags text-2xl mb-2"></i>
+      <h3 class="font-semibold">إدارة الأنواع</h3>
+      <p class="text-sm opacity-90">أضف أو عدل الأنواع</p>
+    </a>
+    <a href="{% url 'main:total_orders' %}" class="bg-white/20 hover:bg-white/30 p-4 rounded-lg transition-colors">
+      <i class="fa-solid fa-chart-line text-2xl mb-2"></i>
+      <h3 class="font-semibold">عرض التقارير</h3>
+      <p class="text-sm opacity-90">شاهد إحصائيات المبيعات</p>
+    </a>
+  </div>
+</div>
+
+<!-- Back to Top Button -->
+<button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="fixed bottom-6 left-6 bg-primary text-white p-3 rounded-full shadow-lg hover:bg-primary/90 transition-colors z-50">
+  <i class="fa-solid fa-arrow-up"></i>
+</button>
+
+<script>
+// Smooth scrolling for anchor links
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+  anchor.addEventListener('click', function (e) {
+    e.preventDefault();
+    const target = document.querySelector(this.getAttribute('href'));
+    if (target) {
+      target.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }
+  });
+});
+
+// Highlight current section in navigation
+window.addEventListener('scroll', function() {
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('a[href^="#"]');
+  
+  let current = '';
+  sections.forEach(section => {
+    const sectionTop = section.offsetTop;
+    const sectionHeight = section.clientHeight;
+    if (window.scrollY >= (sectionTop - 200)) {
+      current = section.getAttribute('id');
+    }
+  });
+
+  navLinks.forEach(link => {
+    link.classList.remove('bg-primary', 'text-white');
+    link.classList.add('hover:bg-gray-100');
+    if (link.getAttribute('href') === '#' + current) {
+      link.classList.add('bg-primary', 'text-white');
+      link.classList.remove('hover:bg-gray-100');
+    }
+  });
+});
+</script>
+{% endblock %}
