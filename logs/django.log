@@ -1,100 +1,59 @@
-INFO 2025-09-14 22:58:53,304 autoreload 25848 23216 Watching for file changes with StatReloader
-INFO 2025-09-14 22:59:01,888 basehttp 25848 8800 "GET /users/1 HTTP/1.1" 200 32070
-WARNING 2025-09-14 22:59:15,644 log 25848 2996 Not Found: /.well-known/appspecific/com.chrome.devtools.json
-WARNING 2025-09-14 22:59:15,644 basehttp 25848 2996 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 10198
-INFO 2025-09-14 22:59:23,187 basehttp 25848 1620 "GET /users/1 HTTP/1.1" 200 32070
-WARNING 2025-09-14 22:59:23,258 log 25848 1620 Not Found: /.well-known/appspecific/com.chrome.devtools.json
-WARNING 2025-09-14 22:59:23,265 basehttp 25848 1620 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 10198
-INFO 2025-09-14 23:00:41,082 basehttp 25848 14052 "GET / HTTP/1.1" 200 97477
-WARNING 2025-09-14 23:00:41,149 log 25848 14052 Not Found: /.well-known/appspecific/com.chrome.devtools.json
-WARNING 2025-09-14 23:00:41,150 basehttp 25848 14052 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 10198
-INFO 2025-09-14 23:00:42,169 autoreload 25848 23216 C:\D\Cooding\GENERAL\Al-Asel\asel\settings.py changed, reloading.
-INFO 2025-09-14 23:00:42,876 autoreload 15756 24084 Watching for file changes with StatReloader
-INFO 2025-09-14 23:00:47,972 basehttp 15756 17772 "GET /users/ HTTP/1.1" 200 58661
-WARNING 2025-09-14 23:00:48,040 log 15756 17772 Not Found: /.well-known/appspecific/com.chrome.devtools.json
-WARNING 2025-09-14 23:00:48,041 basehttp 15756 17772 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 10198
-INFO 2025-09-14 23:00:49,477 basehttp 15756 17772 "GET /users/13 HTTP/1.1" 200 17170
-WARNING 2025-09-14 23:00:49,537 log 15756 17772 Not Found: /.well-known/appspecific/com.chrome.devtools.json
-WARNING 2025-09-14 23:00:49,538 basehttp 15756 17772 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 10198
-INFO 2025-09-14 23:00:52,646 basehttp 15756 23312 "GET /users/ HTTP/1.1" 200 58661
-WARNING 2025-09-14 23:00:52,710 log 15756 23312 Not Found: /.well-known/appspecific/com.chrome.devtools.json
-WARNING 2025-09-14 23:00:52,710 basehttp 15756 23312 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 10198
-INFO 2025-09-14 23:00:54,136 basehttp 15756 23312 "GET /users/3 HTTP/1.1" 200 25605
-WARNING 2025-09-14 23:00:54,197 log 15756 23312 Not Found: /.well-known/appspecific/com.chrome.devtools.json
-WARNING 2025-09-14 23:00:54,198 basehttp 15756 23312 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 10198
-INFO 2025-09-14 23:01:12,426 autoreload 23216 25904 Watching for file changes with StatReloader
-INFO 2025-09-14 23:03:18,292 autoreload 24084 24444 Watching for file changes with StatReloader
-INFO 2025-09-14 23:03:25,414 basehttp 24084 4612 "GET / HTTP/1.1" 200 97477
-INFO 2025-09-14 23:05:38,310 autoreload 24084 24444 C:\D\Cooding\GENERAL\Al-Asel\main\views_cbv.py changed, reloading.
-INFO 2025-09-14 23:05:39,020 autoreload 21536 23768 Watching for file changes with StatReloader
-INFO 2025-09-14 23:05:45,491 autoreload 21536 23768 C:\D\Cooding\GENERAL\Al-Asel\main\urls.py changed, reloading.
-INFO 2025-09-14 23:05:46,234 autoreload 26480 7188 Watching for file changes with StatReloader
-INFO 2025-09-14 23:06:24,410 basehttp 26480 7456 "GET /total_orders HTTP/1.1" 200 38936
-INFO 2025-09-14 23:06:24,433 basehttp 26480 7456 "GET /static/main/mainnn.css HTTP/1.1" 304 0
-INFO 2025-09-14 23:06:28,031 basehttp 26480 7456 "GET / HTTP/1.1" 200 98636
-ERROR 2025-09-14 23:06:42,521 log 26480 7456 Internal Server Error: /help
-Traceback (most recent call last):
-  File "C:\Users\mahmo\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\exception.py", line 55, in inner
-    response = get_response(request)
-  File "C:\Users\mahmo\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\base.py", line 220, in _get_response
-    response = response.render()
-  File "C:\Users\mahmo\AppData\Roaming\Python\Python313\site-packages\django\template\response.py", line 114, in render
-    self.content = self.rendered_content
-                   ^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\mahmo\AppData\Roaming\Python\Python313\site-packages\django\template\response.py", line 90, in rendered_content
-    template = self.resolve_template(self.template_name)
-  File "C:\Users\mahmo\AppData\Roaming\Python\Python313\site-packages\django\template\response.py", line 72, in resolve_template
-    return select_template(template, using=self.using)
-  File "C:\Users\mahmo\AppData\Roaming\Python\Python313\site-packages\django\template\loader.py", line 47, in select_template
-    raise TemplateDoesNotExist(", ".join(template_name_list), chain=chain)
-django.template.exceptions.TemplateDoesNotExist: main/help.html
-ERROR 2025-09-14 23:06:42,525 basehttp 26480 7456 "GET /help HTTP/1.1" 500 87060
-ERROR 2025-09-14 23:07:44,990 log 26480 7456 Internal Server Error: /help
-Traceback (most recent call last):
-  File "C:\Users\mahmo\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\exception.py", line 55, in inner
-    response = get_response(request)
-  File "C:\Users\mahmo\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\base.py", line 220, in _get_response
-    response = response.render()
-  File "C:\Users\mahmo\AppData\Roaming\Python\Python313\site-packages\django\template\response.py", line 114, in render
-    self.content = self.rendered_content
-                   ^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\mahmo\AppData\Roaming\Python\Python313\site-packages\django\template\response.py", line 90, in rendered_content
-    template = self.resolve_template(self.template_name)
-  File "C:\Users\mahmo\AppData\Roaming\Python\Python313\site-packages\django\template\response.py", line 72, in resolve_template
-    return select_template(template, using=self.using)
-  File "C:\Users\mahmo\AppData\Roaming\Python\Python313\site-packages\django\template\loader.py", line 47, in select_template
-    raise TemplateDoesNotExist(", ".join(template_name_list), chain=chain)
-django.template.exceptions.TemplateDoesNotExist: main/help.html
-ERROR 2025-09-14 23:07:44,992 basehttp 26480 7456 "GET /help HTTP/1.1" 500 87197
-INFO 2025-09-14 23:08:27,060 basehttp 26480 23304 "GET /help HTTP/1.1" 200 41073
-INFO 2025-09-14 23:08:27,075 basehttp 26480 23304 "GET /static/main/logoamr.png HTTP/1.1" 304 0
-INFO 2025-09-14 23:08:36,026 autoreload 26480 7188 C:\D\Cooding\GENERAL\Al-Asel\main\views_cbv.py changed, reloading.
-INFO 2025-09-14 23:08:36,791 autoreload 26092 25916 Watching for file changes with StatReloader
-INFO 2025-09-14 23:08:54,656 basehttp 26092 7356 "GET / HTTP/1.1" 200 98636
-INFO 2025-09-14 23:08:58,258 basehttp 26092 7356 "GET /manage/categories HTTP/1.1" 200 33014
-INFO 2025-09-14 23:09:00,231 basehttp 26092 7356 "GET /total_orders HTTP/1.1" 200 38936
-INFO 2025-09-14 23:10:32,773 basehttp 26092 19724 "GET /help HTTP/1.1" 200 41073
-INFO 2025-09-14 23:10:37,772 basehttp 26092 19724 "GET / HTTP/1.1" 200 98636
-INFO 2025-09-14 23:10:39,574 basehttp 26092 19724 "GET / HTTP/1.1" 200 98636
-INFO 2025-09-14 23:10:59,780 basehttp 26092 19724 "GET / HTTP/1.1" 200 109822
-INFO 2025-09-14 23:13:11,255 basehttp 26092 18676 "GET / HTTP/1.1" 200 109832
-INFO 2025-09-14 23:13:23,537 basehttp 26092 18676 "GET / HTTP/1.1" 200 109903
-INFO 2025-09-14 23:16:19,435 basehttp 26092 24164 "GET / HTTP/1.1" 200 109959
-INFO 2025-09-14 23:16:19,453 basehttp 26092 24164 "GET /static/main/make.js HTTP/1.1" 304 0
-INFO 2025-09-14 23:16:27,887 basehttp 26092 29364 "GET / HTTP/1.1" 200 109882
-INFO 2025-09-14 23:17:07,633 basehttp 26092 11028 "GET / HTTP/1.1" 200 109982
-INFO 2025-09-14 23:21:57,952 basehttp 26092 23036 "GET / HTTP/1.1" 200 109982
-INFO 2025-09-14 23:22:08,619 basehttp 26092 23036 "GET /help HTTP/1.1" 200 52419
-INFO 2025-09-14 23:22:19,554 basehttp 26092 23036 "GET /help HTTP/1.1" 200 52547
-INFO 2025-09-14 23:22:24,847 basehttp 26092 23036 "GET /help HTTP/1.1" 200 52547
-INFO 2025-09-14 23:24:22,643 basehttp 26092 23036 "GET /help HTTP/1.1" 200 52556
-INFO 2025-09-14 23:24:22,657 basehttp 26092 23036 "GET /static/main/mainnn.css HTTP/1.1" 304 0
-INFO 2025-09-14 23:25:31,943 basehttp 26092 23036 "GET /help HTTP/1.1" 200 52546
-INFO 2025-09-14 23:26:06,566 basehttp 26092 23036 "GET /users/ HTTP/1.1" 200 71293
-INFO 2025-09-14 23:26:06,692 basehttp 26092 23036 "GET /static/main/users_search.js HTTP/1.1" 200 2469
-INFO 2025-09-14 23:26:07,451 basehttp 26092 23036 "GET / HTTP/1.1" 200 110109
-INFO 2025-09-14 23:26:08,967 basehttp 26092 23036 "GET /total_orders HTTP/1.1" 200 50409
-WARNING 2025-09-14 23:26:23,713 log 26092 23036 Not Found: /.well-known/appspecific/com.chrome.devtools.json
-WARNING 2025-09-14 23:26:23,718 basehttp 26092 23036 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 10362
-INFO 2025-09-14 23:26:39,615 basehttp 26092 23036 "GET / HTTP/1.1" 200 110109
-INFO 2025-09-14 23:26:43,827 basehttp 26092 23036 "GET /coming_order HTTP/1.1" 200 94314
+INFO 2025-09-15 00:16:40,172 autoreload 6800 29476 Watching for file changes with StatReloader
+INFO 2025-09-15 00:17:44,455 basehttp 6800 12500 "GET / HTTP/1.1" 200 110109
+INFO 2025-09-15 00:17:44,523 basehttp 6800 22916 "GET /static/main/mainnn.css HTTP/1.1" 304 0
+INFO 2025-09-15 00:17:44,523 basehttp 6800 29168 "GET /static/main/make.js HTTP/1.1" 304 0
+INFO 2025-09-15 00:17:44,536 basehttp 6800 12500 "GET / HTTP/1.1" 200 110109
+INFO 2025-09-15 00:17:46,143 basehttp 6800 12500 "GET /total_orders HTTP/1.1" 200 50409
+INFO 2025-09-15 00:17:54,971 basehttp 6800 14052 "GET /total_orders/month_sales?m=3&y=2024 HTTP/1.1" 200 39130
+INFO 2025-09-15 00:18:00,273 basehttp 6800 14052 "GET /order_info/9 HTTP/1.1" 200 35250
+INFO 2025-09-15 00:18:00,282 basehttp 6800 14052 "GET /static/main/order_table.js HTTP/1.1" 304 0
+INFO 2025-09-15 00:18:08,218 basehttp 6800 14052 "GET /coming_order/45 HTTP/1.1" 200 36034
+INFO 2025-09-15 00:18:18,443 basehttp 6800 23880 "GET /total_orders HTTP/1.1" 200 50409
+INFO 2025-09-15 00:18:19,112 basehttp 6800 23880 "GET /users/ HTTP/1.1" 200 71293
+INFO 2025-09-15 00:18:19,121 basehttp 6800 23880 "GET /static/main/users_search.js HTTP/1.1" 304 0
+INFO 2025-09-15 00:18:22,018 basehttp 6800 23880 "GET /users/1 HTTP/1.1" 200 44702
+WARNING 2025-09-15 00:18:27,776 log 6800 23880 Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-09-15 00:18:27,777 basehttp 6800 23880 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 10362
+INFO 2025-09-15 00:21:41,147 basehttp 6800 11328 "GET /users/1 HTTP/1.1" 200 45641
+WARNING 2025-09-15 00:21:41,226 log 6800 11328 Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-09-15 00:21:41,226 basehttp 6800 11328 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 10362
+INFO 2025-09-15 00:22:13,943 autoreload 12600 27880 Watching for file changes with StatReloader
+WARNING 2025-09-15 00:22:14,158 log 12600 18244 Not Found: /users/1555
+WARNING 2025-09-15 00:22:14,158 basehttp 12600 18244 "GET /users/1555 HTTP/1.1" 404 3916
+WARNING 2025-09-15 00:22:14,211 log 12600 18244 Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-09-15 00:22:14,211 basehttp 12600 18244 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 10362
+INFO 2025-09-15 00:23:59,014 autoreload 12600 27880 C:\D\Cooding\GENERAL\Al-Asel\asel\settings.py changed, reloading.
+INFO 2025-09-15 00:23:59,705 autoreload 22384 9264 Watching for file changes with StatReloader
+INFO 2025-09-15 00:24:05,087 autoreload 22384 9264 C:\D\Cooding\GENERAL\Al-Asel\asel\settings.py changed, reloading.
+INFO 2025-09-15 00:24:05,716 autoreload 12572 29000 Watching for file changes with StatReloader
+INFO 2025-09-15 00:24:11,087 autoreload 12572 29000 C:\D\Cooding\GENERAL\Al-Asel\asel\settings.py changed, reloading.
+INFO 2025-09-15 00:24:11,746 autoreload 20476 24544 Watching for file changes with StatReloader
+INFO 2025-09-15 00:24:18,175 autoreload 20476 24544 C:\D\Cooding\GENERAL\Al-Asel\asel\settings.py changed, reloading.
+INFO 2025-09-15 00:24:18,758 autoreload 28824 952 Watching for file changes with StatReloader
+INFO 2025-09-15 00:24:42,517 autoreload 28824 952 C:\D\Cooding\GENERAL\Al-Asel\asel\settings.py changed, reloading.
+INFO 2025-09-15 00:24:43,180 autoreload 26656 14032 Watching for file changes with StatReloader
+INFO 2025-09-15 00:24:45,485 autoreload 26656 14032 C:\D\Cooding\GENERAL\Al-Asel\asel\settings.py changed, reloading.
+INFO 2025-09-15 00:24:46,074 autoreload 5416 16744 Watching for file changes with StatReloader
+WARNING 2025-09-15 00:24:52,022 base 5416 28592 Session data corrupted
+INFO 2025-09-15 00:24:52,034 basehttp 5416 28592 "GET /users/1555 HTTP/1.1" 302 0
+INFO 2025-09-15 00:24:52,053 basehttp 5416 28592 "GET /login/?next=/users/1555 HTTP/1.1" 200 4931
+WARNING 2025-09-15 00:24:52,104 log 5416 28592 Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-09-15 00:24:52,104 basehttp 5416 28592 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 179
+INFO 2025-09-15 00:25:00,643 basehttp 5416 29152 "POST /login/ HTTP/1.1" 302 0
+WARNING 2025-09-15 00:25:00,653 log 5416 29152 Not Found: /users/1555
+WARNING 2025-09-15 00:25:00,654 basehttp 5416 29152 "GET /users/1555 HTTP/1.1" 404 179
+WARNING 2025-09-15 00:25:00,696 log 5416 29152 Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-09-15 00:25:00,697 basehttp 5416 29152 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 179
+WARNING 2025-09-15 00:25:10,247 log 5416 1552 Not Found: /users/1555
+WARNING 2025-09-15 00:25:10,248 basehttp 5416 1552 "GET /users/1555 HTTP/1.1" 404 179
+WARNING 2025-09-15 00:25:10,292 log 5416 1552 Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-09-15 00:25:10,293 basehttp 5416 1552 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 179
+INFO 2025-09-15 00:25:17,761 autoreload 23184 27340 Watching for file changes with StatReloader
+WARNING 2025-09-15 00:25:19,354 log 23184 14112 Not Found: /users/1555
+WARNING 2025-09-15 00:25:19,355 basehttp 23184 14112 "GET /users/1555 HTTP/1.1" 404 3916
+WARNING 2025-09-15 00:25:19,407 log 23184 14112 Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-09-15 00:25:19,409 basehttp 23184 14112 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 10362
+WARNING 2025-09-15 00:25:23,987 log 23184 22780 Not Found: /users/1555
+WARNING 2025-09-15 00:25:23,988 basehttp 23184 22780 "GET /users/1555 HTTP/1.1" 404 3916
+WARNING 2025-09-15 00:25:24,036 log 23184 22780 Not Found: /.well-known/appspecific/com.chrome.devtools.json
+WARNING 2025-09-15 00:25:24,039 basehttp 23184 22780 "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 10362
