@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+    <title>نظام الأصيل - إدارة المبيعات</title>
+    
+    <!-- TailwindCSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              'arabic': ['Cairo', 'Tajawal', 'sans-serif'],
+            },
+            colors: {
+              'primary': '#2e4e85',
+              'secondary': '#7cd4fd',
+            }
+          }
+        }
+      }
+    </script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Cairo', 'Tajawal', sans-serif;
+        }
+        .hero-bg {
+            background: linear-gradient(135deg, #2e4e85 0%, #7cd4fd 100%);
+        }
+        .section-divider {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #2e4e85, transparent);
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .nav-link {
+            position: relative;
+            overflow: hidden;
+        }
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #2e4e85;
+            transition: width 0.3s ease;
+        }
+        .nav-link:hover::before {
+            width: 100%;
+        }
+        .smooth-scroll {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+
+<body class="font-arabic bg-gray-50 min-h-screen smooth-scroll">
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm shadow-sm border-b-2 border-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center py-4">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-primary rounded-full flex items-center justify-center">
+                        <i class="fa-solid fa-chart-line text-white text-xl"></i>
+                    </div>
+                    <span class="mr-3 text-xl font-bold text-primary">نظام الأصيل</span>
+                </div>
+                
+                <!-- Navigation Links -->
+                <div class="hidden md:flex space-x-2 space-x-reverse">
+                    <a href="#home" class="nav-link text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium">الرئيسية</a>
+                    <a href="#login" class="nav-link text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium">تسجيل الدخول</a>
+                    <a href="#dashboard" class="nav-link text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium">لوحة التحكم</a>
+                    <a href="#orders" class="nav-link text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium">الطلبات</a>
+                    <a href="#customers" class="nav-link text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium">العملاء</a>
+                    <a href="#analytics" class="nav-link text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium">التحليلات</a>
+                    <a href="#help" class="nav-link text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium">المساعدة</a>
+                </div>
+                
+                <!-- Mobile Menu Button -->
+                <button class="md:hidden p-2 rounded-md text-primary hover:bg-gray-100" onclick="toggleMobileMenu()">
+                    <i class="fa-solid fa-bars text-2xl"></i>
+                </button>
+            </div>
+            
+            <!-- Mobile Menu -->
+            <div id="mobile-menu" class="hidden md:hidden pb-4">
+                <div class="flex flex-col space-y-2">
+                    <a href="#home" class="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium">الرئيسية</a>
+                    <a href="#login" class="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium">تسجيل الدخول</a>
+                    <a href="#dashboard" class="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium">لوحة التحكم</a>
+                    <a href="#orders" class="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium">الطلبات</a>
+                    <a href="#customers" class="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium">العملاء</a>
+                    <a href="#analytics" class="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium">التحليلات</a>
+                    <a href="#help" class="text-gray-700 hover:text-primary px-3 py-2 text-sm font-medium">المساعدة</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="home" class="hero-bg text-white pt-24 pb-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center">
+                <div class="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fa-solid fa-chart-line text-4xl"></i>
+                </div>
+                <h1 class="text-4xl md:text-6xl font-bold mb-6">نظام الأصيل</h1>
+                <p class="text-xl md:text-2xl mb-8 opacity-90">نظام متكامل لإدارة المبيعات والعملاء والمنتجات</p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="#login" class="bg-white text-primary px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+                        <i class="fa-solid fa-sign-in-alt ml-2"></i>
+                        تسجيل الدخول
+                    </a>
+                    <a href="#demo" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-primary transition-colors">
+                        <i class="fa-solid fa-play ml-2"></i>
+                        مشاهدة العرض
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Login Section -->
+    <section id="login" class="py-16 bg-white">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">تسجيل الدخول</h2>
+                <p class="text-gray-600">ادخل إلى نظام إدارة المبيعات</p>
+            </div>
+            
+            <div class="max-w-md mx-auto bg-white rounded-lg shadow-lg border border-gray-200 p-8">
+                <form class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">اسم المستخدم</label>
+                        <input type="text" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary" placeholder="أدخل اسم المستخدم" value="admin">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">كلمة المرور</label>
+                        <input type="password" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary" placeholder="أدخل كلمة المرور" value="********">
+                    </div>
+                    <button type="button" onclick="showAlert('تم تسجيل الدخول بنجاح!')" class="w-full bg-primary text-white py-3 rounded-lg font-semibold hover:bg-primary/90 transition-colors">
+                        <i class="fa-solid fa-sign-in-alt ml-2"></i>
+                        تسجيل الدخول
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Dashboard Section -->
+    <section id="dashboard" class="py-16 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">لوحة التحكم الرئيسية</h2>
+                <p class="text-gray-600">نظرة شاملة على أداء مبيعاتك</p>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 card-hover">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <i class="fa-solid fa-shopping-cart text-blue-600 text-xl"></i>
+                        </div>
+                        <div class="mr-4">
+                            <p class="text-sm font-medium text-gray-600">إجمالي الطلبات</p>
+                            <p class="text-2xl font-bold text-gray-900">1,247</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 card-hover">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                            <i class="fa-solid fa-dollar-sign text-green-600 text-xl"></i>
+                        </div>
+                        <div class="mr-4">
+                            <p class="text-sm font-medium text-gray-600">إجمالي المبيعات</p>
+                            <p class="text-2xl font-bold text-gray-900">245,850 ج.م</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 card-hover">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                            <i class="fa-solid fa-users text-purple-600 text-xl"></i>
+                        </div>
+                        <div class="mr-4">
+                            <p class="text-sm font-medium text-gray-600">العملاء</p>
+                            <p class="text-2xl font-bold text-gray-900">89</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 card-hover">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                            <i class="fa-solid fa-box text-yellow-600 text-xl"></i>
+                        </div>
+                        <div class="mr-4">
+                            <p class="text-sm font-medium text-gray-600">المنتجات</p>
+                            <p class="text-2xl font-bold text-gray-900">156</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h3 class="text-xl font-semibold text-gray-900 mb-6">الإجراءات السريعة</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <button class="flex items-center p-4 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
+                        <i class="fa-solid fa-plus-circle text-2xl ml-3"></i>
+                        <div class="text-right">
+                            <p class="font-semibold">طلب جديد</p>
+                            <p class="text-sm opacity-90">إنشاء طلب جديد</p>
+                        </div>
+                    </button>
+                    
+                    <button class="flex items-center p-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                        <i class="fa-solid fa-user-plus text-2xl ml-3"></i>
+                        <div class="text-right">
+                            <p class="font-semibold">عميل جديد</p>
+                            <p class="text-sm opacity-90">إضافة عميل جديد</p>
+                        </div>
+                    </button>
+                    
+                    <button class="flex items-center p-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+                        <i class="fa-solid fa-box text-2xl ml-3"></i>
+                        <div class="text-right">
+                            <p class="font-semibold">منتج جديد</p>
+                            <p class="text-sm opacity-90">إضافة منتج جديد</p>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Orders Section -->
+    <section id="orders" class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">إدارة الطلبات</h2>
+                <p class="text-gray-600">إنشاء وإدارة طلبات المبيعات</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Create Order Form -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+                        <i class="fa-solid fa-plus-circle text-primary ml-2"></i>
+                        إنشاء طلب جديد
+                    </h3>
+                    
+                    <div class="space-y-6">
+                        <!-- Customer Selection -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">العميل</label>
+                            <select class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                                <option>أحمد محمد</option>
+                                <option>فاطمة علي</option>
+                                <option>محمود حسن</option>
+                            </select>
+                        </div>
+
+                        <!-- Order Type -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">نوع الطلب</label>
+                            <div class="flex space-x-4 space-x-reverse">
+                                <label class="flex items-center">
+                                    <input type="radio" name="order_type" class="h-4 w-4 text-primary focus:ring-primary border-gray-300" checked>
+                                    <span class="mr-2 text-sm">ماركت</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="radio" name="order_type" class="h-4 w-4 text-primary focus:ring-primary border-gray-300">
+                                    <span class="mr-2 text-sm">جملة</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Products -->
+                        <div>
+                            <h4 class="text-lg font-semibold text-gray-900 mb-4">المنتجات</h4>
+                            <div class="space-y-4">
+                                <div class="border border-gray-200 rounded-lg p-4">
+                                    <h5 class="font-semibold text-gray-800 mb-2">إلكترونيات</h5>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+                                            <span class="text-sm">جهاز كمبيوتر</span>
+                                            <div class="flex items-center space-x-2 space-x-reverse">
+                                                <span class="text-sm text-gray-600">15,000 ج.م</span>
+                                                <input type="number" class="w-16 px-2 py-1 border border-gray-300 rounded text-center" placeholder="0" min="0">
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+                                            <span class="text-sm">هاتف ذكي</span>
+                                            <div class="flex items-center space-x-2 space-x-reverse">
+                                                <span class="text-sm text-gray-600">8,000 ج.م</span>
+                                                <input type="number" class="w-16 px-2 py-1 border border-gray-300 rounded text-center" placeholder="0" min="0">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="border border-gray-200 rounded-lg p-4">
+                                    <h5 class="font-semibold text-gray-800 mb-2">ملابس</h5>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+                                            <span class="text-sm">قميص قطني</span>
+                                            <div class="flex items-center space-x-2 space-x-reverse">
+                                                <span class="text-sm text-gray-600">250 ج.م</span>
+                                                <input type="number" class="w-16 px-2 py-1 border border-gray-300 rounded text-center" placeholder="0" min="0">
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
+                                            <span class="text-sm">بنطلون جينز</span>
+                                            <div class="flex items-center space-x-2 space-x-reverse">
+                                                <span class="text-sm text-gray-600">400 ج.م</span>
+                                                <input type="number" class="w-16 px-2 py-1 border border-gray-300 rounded text-center" placeholder="0" min="0">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="w-full bg-primary text-white py-3 rounded-lg font-semibold hover:bg-primary/90 transition-colors">
+                            <i class="fa-solid fa-check ml-2"></i>
+                            إنشاء الطلب
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Recent Orders -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+                        <i class="fa-solid fa-receipt text-primary ml-2"></i>
+                        الطلبات الحديثة
+                    </h3>
+                    
+                    <div class="space-y-4">
+                        <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="font-semibold text-gray-900">#1247</span>
+                                <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">مكتمل</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-2">العميل: أحمد محمد</p>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-500">2025-01-15 14:30</span>
+                                <span class="font-semibold text-primary">1,250 ج.م</span>
+                            </div>
+                        </div>
+
+                        <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="font-semibold text-gray-900">#1246</span>
+                                <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">معلق</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-2">العميل: فاطمة علي</p>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-500">2025-01-15 12:15</span>
+                                <span class="font-semibold text-primary">850 ج.م</span>
+                            </div>
+                        </div>
+
+                        <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="font-semibold text-gray-900">#1245</span>
+                                <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">قيد التجهيز</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-2">العميل: محمود حسن</p>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-500">2025-01-14 16:45</span>
+                                <span class="font-semibold text-primary">2,100 ج.م</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Customers Section -->
+    <section id="customers" class="py-16 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">إدارة العملاء</h2>
+                <p class="text-gray-600">إدارة قاعدة بيانات العملاء والموردين</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Customer Search and List -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+                        <i class="fa-solid fa-users text-primary ml-2"></i>
+                        العملاء
+                    </h3>
+                    
+                    <!-- Search -->
+                    <div class="mb-6">
+                        <div class="relative">
+                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                <i class="fa-solid fa-search text-gray-400"></i>
+                            </div>
+                            <input type="text" class="w-full pr-10 pl-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary" placeholder="ابحث عن عميل...">
+                        </div>
+                    </div>
+
+                    <!-- Customers List -->
+                    <div class="space-y-4 max-h-96 overflow-y-auto">
+                        <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <i class="fa-solid fa-user text-gray-500 ml-3"></i>
+                                    <div>
+                                        <p class="font-semibold text-gray-900">أحمد محمد</p>
+                                        <p class="text-sm text-gray-500">01234567890</p>
+                                    </div>
+                                </div>
+                                <span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full">عميل</span>
+                            </div>
+                        </div>
+
+                        <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <i class="fa-solid fa-store text-blue-500 ml-3"></i>
+                                    <div>
+                                        <p class="font-semibold text-gray-900">متجر النور</p>
+                                        <p class="text-sm text-gray-500">01098765432</p>
+                                    </div>
+                                </div>
+                                <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">متجر</span>
+                            </div>
+                        </div>
+
+                        <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <i class="fa-solid fa-truck text-green-500 ml-3"></i>
+                                    <div>
+                                        <p class="font-semibold text-gray-900">شركة التوريد المصرية</p>
+                                        <p class="text-sm text-gray-500">01156789012</p>
+                                    </div>
+                                </div>
+                                <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">مورد</span>
+                            </div>
+                        </div>
+
+                        <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <i class="fa-solid fa-user text-gray-500 ml-3"></i>
+                                    <div>
+                                        <p class="font-semibold text-gray-900">فاطمة علي</p>
+                                        <p class="text-sm text-gray-500">01087654321</p>
+                                    </div>
+                                </div>
+                                <span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full">عميل</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add Customer Form -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+                        <i class="fa-solid fa-user-plus text-primary ml-2"></i>
+                        إضافة عميل جديد
+                    </h3>
+                    
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">اسم العميل</label>
+                            <input type="text" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary" placeholder="أدخل اسم العميل">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">رقم الهاتف</label>
+                            <input type="tel" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary" placeholder="أدخل رقم الهاتف">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">نوع العميل</label>
+                            <select class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+                                <option>عميل عادي</option>
+                                <option>متجر</option>
+                                <option>مورد</option>
+                            </select>
+                        </div>
+
+                        <button class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors">
+                            <i class="fa-solid fa-plus ml-2"></i>
+                            إضافة العميل
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Analytics Section -->
+    <section id="analytics" class="py-16 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">التحليلات والتقارير</h2>
+                <p class="text-gray-600">تحليل شامل لأداء المبيعات والأرباح</p>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                <div class="bg-blue-50 rounded-lg p-6 card-hover">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-sm font-medium text-blue-900">إجمالي المبيعات</h3>
+                        <i class="fa-solid fa-chart-line text-blue-500 text-2xl"></i>
+                    </div>
+                    <p class="text-2xl font-bold text-blue-600">245,850 ج.م</p>
+                    <p class="text-sm text-blue-700 mt-1">+12.5% من الشهر الماضي</p>
+                </div>
+
+                <div class="bg-green-50 rounded-lg p-6 card-hover">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-sm font-medium text-green-900">إجمالي الربح</h3>
+                        <i class="fa-solid fa-coins text-green-500 text-2xl"></i>
+                    </div>
+                    <p class="text-2xl font-bold text-green-600">89,420 ج.م</p>
+                    <p class="text-sm text-green-700 mt-1">+8.3% من الشهر الماضي</p>
+                </div>
+
+                <div class="bg-purple-50 rounded-lg p-6 card-hover">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-sm font-medium text-purple-900">متوسط سعر الطلب</h3>
+                        <i class="fa-solid fa-calculator text-purple-500 text-2xl"></i>
+                    </div>
+                    <p class="text-2xl font-bold text-purple-600">197 ج.م</p>
+                    <p class="text-sm text-purple-700 mt-1">+5.2% من الشهر الماضي</p>
+                </div>
+
+                <div class="bg-red-50 rounded-lg p-6 card-hover">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-sm font-medium text-red-900">الرصيد الآجل</h3>
+                        <i class="fa-solid fa-clock text-red-500 text-2xl"></i>
+                    </div>
+                    <p class="text-2xl font-bold text-red-600">15,680 ج.م</p>
+                    <p class="text-sm text-red-700 mt-1">-3.1% من الشهر الماضي</p>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Sales Chart -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-6">مبيعات الشهور الأخيرة</h3>
+                    <div class="h-80">
+                        <canvas id="salesChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Profit Distribution -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <h3 class="text-xl font-semibold text-gray-900 mb-6">توزيع الأرباح والديون</h3>
+                    <div class="h-80 flex items-center justify-center">
+                        <canvas id="profitChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Help Section -->
+    <section id="help" class="py-16 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">دليل الاستخدام</h2>
+                <p class="text-gray-600">تعلم كيفية استخدام جميع ميزات النظام</p>
+            </div>
+
+            <!-- Help Categories -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 card-hover">
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fa-solid fa-rocket text-blue-500 text-2xl"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">البداية السريعة</h3>
+                        <p class="text-gray-600 text-sm">تعلم الأساسيات وابدأ استخدام النظام</p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 card-hover">
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fa-solid fa-shopping-cart text-green-500 text-2xl"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">إدارة الطلبات</h3>
+                        <p class="text-gray-600 text-sm">كيفية إنشاء وإدارة الطلبات</p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 card-hover">
+                    <div class="text-center">
+                        <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fa-solid fa-users text-purple-500 text-2xl"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-2">إدارة العملاء</h3>
+                        <p class="text-gray-600 text-sm">إضافة وإدارة العملاء والموردين</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Help Content -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+                <h3 class="text-2xl font-semibold text-gray-900 mb-6 text-center">الميزات الرئيسية</h3>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div>
+                        <h4 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                            <i class="fa-solid fa-check-circle text-green-500 ml-2"></i>
+                            إدارة شاملة للطلبات
+                        </h4>
+                        <ul class="space-y-2 text-gray-600">
+                            <li class="flex items-start">
+                                <i class="fa-solid fa-chevron-left text-primary mt-1 ml-2"></i>
+                                إنشاء طلبات جديدة بسهولة
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fa-solid fa-chevron-left text-primary mt-1 ml-2"></i>
+                                تعديل وحذف الطلبات الموجودة
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fa-solid fa-chevron-left text-primary mt-1 ml-2"></i>
+                                تتبع حالة الطلبات
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h4 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                            <i class="fa-solid fa-chart-line text-blue-500 ml-2"></i>
+                            تقارير مفصلة ومتقدمة
+                        </h4>
+                        <ul class="space-y-2 text-gray-600">
+                            <li class="flex items-start">
+                                <i class="fa-solid fa-chevron-left text-primary mt-1 ml-2"></i>
+                                إحصائيات المبيعات الشهرية والسنوية
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fa-solid fa-chevron-left text-primary mt-1 ml-2"></i>
+                                تحليل الأرباح والخسائر
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fa-solid fa-chevron-left text-primary mt-1 ml-2"></i>
+                                رسوم بيانية تفاعلية
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h4 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                            <i class="fa-solid fa-users text-purple-500 ml-2"></i>
+                            إدارة العملاء والموردين
+                        </h4>
+                        <ul class="space-y-2 text-gray-600">
+                            <li class="flex items-start">
+                                <i class="fa-solid fa-chevron-left text-primary mt-1 ml-2"></i>
+                                قاعدة بيانات شاملة للعملاء
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fa-solid fa-chevron-left text-primary mt-1 ml-2"></i>
+                                تصنيف العملاء حسب النوع
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fa-solid fa-chevron-left text-primary mt-1 ml-2"></i>
+                                تتبع تاريخ المشتريات
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <h4 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                            <i class="fa-solid fa-shield-alt text-green-500 ml-2"></i>
+                            الأمان وحماية البيانات
+                        </h4>
+                        <ul class="space-y-2 text-gray-600">
+                            <li class="flex items-start">
+                                <i class="fa-solid fa-chevron-left text-primary mt-1 ml-2"></i>
+                                نظام تسجيل دخول آمن
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fa-solid fa-chevron-left text-primary mt-1 ml-2"></i>
+                                نسخ احتياطية تلقائية
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fa-solid fa-chevron-left text-primary mt-1 ml-2"></i>
+                                حماية البيانات الحساسة
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white">
+        <!-- Main Footer Content -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                
+                <!-- Company Info -->
+                <div class="space-y-4">
+                    <div class="flex items-center space-x-3 space-x-reverse">
+                        <div class="w-12 h-12 bg-gradient-to-br from-primary to-primary/80 rounded-xl flex items-center justify-center">
+                            <i class="fa-solid fa-chart-line text-white text-xl"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold">نظام الأصيل</h3>
+                            <p class="text-gray-400 text-sm">إدارة المبيعات</p>
+                        </div>
+                    </div>
+                    <p class="text-gray-300 text-sm leading-relaxed">
+                        نظام متكامل لإدارة المبيعات والعملاء والمنتجات مع واجهة عربية حديثة وسهلة الاستخدام.
+                    </p>
+                </div>
+
+                <!-- Quick Links -->
+                <div>
+                    <h4 class="text-lg font-semibold mb-6 flex items-center">
+                        <i class="fa-solid fa-link text-primary ml-2"></i>
+                        روابط سريعة
+                    </h4>
+                    <ul class="space-y-3">
+                        <li><a href="#home" class="text-gray-300 hover:text-primary transition-colors">الرئيسية</a></li>
+                        <li><a href="#dashboard" class="text-gray-300 hover:text-primary transition-colors">لوحة التحكم</a></li>
+                        <li><a href="#orders" class="text-gray-300 hover:text-primary transition-colors">الطلبات</a></li>
+                        <li><a href="#customers" class="text-gray-300 hover:text-primary transition-colors">العملاء</a></li>
+                        <li><a href="#analytics" class="text-gray-300 hover:text-primary transition-colors">التحليلات</a></li>
+                    </ul>
+                </div>
+
+                <!-- Features -->
+                <div>
+                    <h4 class="text-lg font-semibold mb-6 flex items-center">
+                        <i class="fa-solid fa-star text-primary ml-2"></i>
+                        المميزات
+                    </h4>
+                    <ul class="space-y-3">
+                        <li class="flex items-center text-gray-300">
+                            <i class="fa-solid fa-check text-green-400 ml-2"></i>
+                            إدارة شاملة للطلبات
+                        </li>
+                        <li class="flex items-center text-gray-300">
+                            <i class="fa-solid fa-check text-green-400 ml-2"></i>
+                            تقارير مفصلة ومتقدمة
+                        </li>
+                        <li class="flex items-center text-gray-300">
+                            <i class="fa-solid fa-check text-green-400 ml-2"></i>
+                            واجهة عربية سهلة الاستخدام
+                        </li>
+                        <li class="flex items-center text-gray-300">
+                            <i class="fa-solid fa-check text-green-400 ml-2"></i>
+                            حماية البيانات والأمان
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Contact Info -->
+                <div>
+                    <h4 class="text-lg font-semibold mb-6 flex items-center">
+                        <i class="fa-solid fa-phone text-primary ml-2"></i>
+                        معلومات التواصل
+                    </h4>
+                    <div class="space-y-4">
+                        <div class="flex items-start space-x-3 space-x-reverse">
+                            <i class="fa-solid fa-envelope text-primary mt-1"></i>
+                            <div>
+                                <p class="text-gray-300 text-sm">البريد الإلكتروني</p>
+                                <p class="text-white">info@al-asel.com</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-3 space-x-reverse">
+                            <i class="fa-solid fa-phone text-primary mt-1"></i>
+                            <div>
+                                <p class="text-gray-300 text-sm">الهاتف</p>
+                                <p class="text-white" dir='ltr'>+20 122 425 2742</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-3 space-x-reverse">
+                            <i class="fa-solid fa-map-marker-alt text-primary mt-1"></i>
+                            <div>
+                                <p class="text-gray-300 text-sm">العنوان</p>
+                                <p class="text-white">الأسكندرية، مصر</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Footer -->
+        <div class="border-t border-gray-700">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <div class="flex flex-col md:flex-row items-center justify-between">
+                    <div class="text-gray-400 text-sm mb-4 md:mb-0">
+                        <p>&copy; 2025 نظام الأصيل. جميع الحقوق محفوظة.</p>
+                    </div>
+                    <div class="flex items-center space-x-2 space-x-reverse">
+                        <i class="fa-solid fa-heart text-red-500"></i>
+                        <span class="text-gray-400 text-sm">صُنع بـ</span>
+                        <span class="text-primary">الحب والتقنية</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Floating Action Buttons -->
+    <div class="fixed bottom-6 right-6 space-y-3 z-50">
+        <!-- Help Button -->
+        <a href="#help" class="w-14 h-14 bg-primary hover:bg-primary/90 text-white rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110 group">
+            <i class="fa-solid fa-question text-xl"></i>
+            <span class="absolute right-16 bg-gray-900 text-white px-3 py-1 rounded-lg text-sm opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                المساعدة
+            </span>
+        </a>
+        
+        <!-- Quick Order Button -->
+        <a href="#orders" class="w-14 h-14 bg-green-500 hover:bg-green-600 text-white rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110 group">
+            <i class="fa-solid fa-plus text-xl"></i>
+            <span class="absolute right-16 bg-gray-900 text-white px-3 py-1 rounded-lg text-sm opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                طلب جديد
+            </span>
+        </a>
+        
+        <!-- Back to Top Button -->
+        <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="w-14 h-14 bg-gray-700 hover:bg-gray-600 text-white rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110 group">
+            <i class="fa-solid fa-arrow-up text-xl"></i>
+            <span class="absolute right-16 bg-gray-900 text-white px-3 py-1 rounded-lg text-sm opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                للأعلى
+            </span>
+        </button>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // Mobile menu toggle
+        function toggleMobileMenu() {
+            const mobileMenu = document.getElementById('mobile-menu');
+            mobileMenu.classList.toggle('hidden');
+        }
+
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Alert function for demo purposes
+        function showAlert(message) {
+            alert(message);
+        }
+
+        // Initialize charts when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Sales Chart
+            const salesCtx = document.getElementById('salesChart').getContext('2d');
+            new Chart(salesCtx, {
+                type: 'line',
+                data: {
+                    labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
+                    datasets: [{
+                        label: 'المبيعات (ج.م)',
+                        data: [12000, 19000, 15000, 25000, 22000, 30000],
+                        borderColor: '#2e4e85',
+                        backgroundColor: 'rgba(46, 78, 133, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString() + ' ج.م';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Profit Chart
+            const profitCtx = document.getElementById('profitChart').getContext('2d');
+            new Chart(profitCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['الأرباح', 'الديون المتبقية'],
+                    datasets: [{
+                        data: [89420, 15680],
+                        backgroundColor: [
+                            '#10B981',
+                            '#EF4444'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Add smooth animations to cards
+            const cards = document.querySelectorAll('.card-hover');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            });
+
+            cards.forEach(card => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                observer.observe(card);
+            });
+        });
+
+        // Navigation highlighting
+        window.addEventListener('scroll', function() {
+            const sections = document.querySelectorAll('section[id]');
+            const navLinks = document.querySelectorAll('nav a[href^="#"]');
+            
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop - 100;
+                const sectionHeight = section.clientHeight;
+                if (window.scrollY >= sectionTop && window.scrollY < sectionTop + sectionHeight) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('text-primary', 'font-semibold');
+                link.classList.add('text-gray-700');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.remove('text-gray-700');
+                    link.classList.add('text-primary', 'font-semibold');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

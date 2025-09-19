@@ -2,6 +2,9 @@
 
 Al Asel is a kit shop owned by a friend, specializing in selling equipment and related items. Currently, transactions are managed using Excel, which may not be the most efficient or accurate method. To address this, I envisioned a specialized system tailored for managing the store's operations, from inventory and orders to client management and sales analysis. This report outlines the key components and functionalities of the proposed system.
 
+## 🚀 Live Demo
+[Visit the Website](https://mego354.github.io/Al-Asel/)
+
 ## Technologies Used
 - Django
 - JavaScript
