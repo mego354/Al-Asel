@@ -505,13 +505,15 @@
         overlay.addEventListener('click', closeSidebarFunc);
 
         // Mobile menu toggle
-        menuButton.addEventListener('click', function() {
-          mobileMenu.classList.toggle('hidden');
-        });
+        if (mobileMenu) {
+          menuButton.addEventListener('click', function() {
+            mobileMenu.classList.toggle('hidden');
+          });
+        }
 
         // Close mobile menu when clicking outside
         document.addEventListener('click', function(event) {
-          if (!menuButton.contains(event.target) && !mobileMenu.contains(event.target)) {
+          if (mobileMenu && menuButton && !menuButton.contains(event.target) && !mobileMenu.contains(event.target)) {
             mobileMenu.classList.add('hidden');
           }
         });

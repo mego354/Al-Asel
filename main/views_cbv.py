@@ -345,7 +345,7 @@ class EditOrderView(LoginRequiredMixin, DetailView):
                 order_items = OrderItem.objects.filter(order=order)
 
                 for order_item in order_items:
-                    new_quantity = request.POST[f"quantity_{order_item}"]
+                    new_quantity = request.POST[f"quantity_{order_item.id}"]
                     try:
                         if int(new_quantity) < 1:
                             order_item.delete()
