@@ -1,0 +1,131 @@
+{% extends "main/layout.html" %}
+{% load static %}
+
+{% block body %}
+<!-- Breadcrumb -->
+<nav class="flex mb-6" aria-label="Breadcrumb">
+  <ol class="inline-flex items-center space-x-1 space-x-reverse md:space-x-2 md:space-x-reverse">
+    <li class="inline-flex items-center">
+      <a href="{% url 'main:transfer_history' %}"
+        class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-primary">
+        <i class="fa-solid fa-exchange-alt w-4 h-4 ml-2"></i>
+        سجل التحويلات
+      </a>
+    </li>
+    <li>
+      <div class="flex items-center">
+        <i class="fa-solid fa-chevron-left text-gray-400 mx-1"></i>
+        <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2">نقل منتجات</span>
+      </div>
+    </li>
+  </ol>
+</nav>
+
+<!-- Transfer Form -->
+<form action="{% url 'main:make_transfer' %}" method="post" class="space-y-6">
+  {% csrf_token %}
+
+  <!-- Branch Selection -->
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <h2 class="text-lg font-semibold text-gray-900 mb-4">تفاصيل النقل</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- From Branch -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">من (المصدر)</label>
+        <select name="from_branch" id="from_branch" onchange="window.location.href='?from_branch=' + this.value"
+          class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+          {% for branch in branches %}
+          <option value="{{branch.id}}" {% if selected_from_branch.id == branch.id %}selected{% endif %}>{{branch.name}}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- To Branch -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">إلى (الوجهة)</label>
+        <select name="to_branch" class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+          <option value="">المخزن الرئيسي</option>
+          {% for branch in branches %}
+          <option value="{{branch.id}}">{{branch.name}}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Categories and Items -->
+  <div class="space-y-6">
+    <!-- Search Input -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+      <div class="relative">
+        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+          <i class="fa-solid fa-search text-gray-400"></i>
+        </div>
+        <input type="text" id="product-search"
+          class="block w-full pr-10 pl-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
+          placeholder="بحث عن منتج...">
+      </div>
+    </div>
+
+    {% for category, items in items_object.items %}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 category-container">
+      <!-- Category Header -->
+      <div
+        class="category-header bg-gray-50 px-6 py-4 border-b border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors"
+        data-code="{{category}}">
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-semibold text-gray-900">{{category}}</h3>
+          <span class="toggle-icon text-primary" data-toggle="{{category}}">
+            <i class="fa-solid fa-angle-down transition-transform duration-200"></i>
+          </span>
+        </div>
+      </div>
+      
+      <!-- Items Container -->
+      <div id="{{category}}"
+        class="items-container p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {% for item in items %}
+        <div class="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow item-card">
+          <!-- Item Header -->
+          <div class="p-4 border-b border-gray-100">
+            <h4 class="text-right font-semibold text-gray-900 text-lg item-name">{{ item.name }}</h4>
+          </div>
+
+          <!-- Item Details -->
+          <div class="p-4 space-y-3">
+            <!-- Quantity Input -->
+            <div class="pt-2">
+              <input type="number" name="quantity_{{ item.id }}" placeholder="الكمية" value="0" min="0" max="{{ item.branch_quantity }}"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-center">
+            </div>
+          </div>
+
+          <!-- Item Footer -->
+          <div class="px-4 py-3 bg-gray-50 border-t border-gray-100">
+            <div class="text-right">
+              <small class="text-sm text-gray-500 stock" data-quantity="{{ item.quantity }}">
+                المخزون: <span class="font-medium">{{ item.quantity }}</span>
+              </small>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Submit Button -->
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div class="flex justify-center">
+      <button type="submit"
+        class="bg-primary hover:bg-primary/90 text-white font-medium py-3 px-8 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+        <i class="fa-solid fa-exchange-alt ml-2"></i>
+        تأكيد النقل
+      </button>
+    </div>
+  </div>
+</form>
+
+<script src="{% static 'main/makee.js' %}"></script>
+{% endblock %}

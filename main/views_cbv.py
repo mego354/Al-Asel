@@ -14,7 +14,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
-from .models import Customer, Order, Item, OrderItem, Category, Store_Order, Store_OrderItem
+from .models import Customer, Order, Item, OrderItem, Category, Store_Order, Store_OrderItem, TransferOrder, TransferOrderItem, BranchStock, OrderPayment
 from .forms import CategoryForm, CustomerForm, ItemForm
 from decimal import Decimal, InvalidOperation
 import datetime
@@ -63,15 +63,49 @@ class MakeOrderView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        
+        # Get selected branch from GET request
+        selected_branch_id = self.request.GET.get('branch')
+        selected_branch = None
+        
+        if selected_branch_id:
+            try:
+                selected_branch = Customer.objects.get(id=selected_branch_id, is_shop=True)
+            except Customer.DoesNotExist:
+                pass
+        
+        # If no branch selected, try to select the first one (or force user to select)
+        # For better UX, let's default to the first shop if available
+        if not selected_branch:
+            selected_branch = Customer.objects.filter(is_shop=True).first()
+
         items_object = {}
         categories = Category.objects.all()
+        
         for category in categories:
             items = Item.objects.filter(category=category).order_by('id')
+            
+            # Attach branch-specific quantity
+            for item in items:
+                if selected_branch:
+                    try:
+                        stock = BranchStock.objects.get(branch=selected_branch, item=item)
+                        item.branch_quantity = stock.quantity
+                    except BranchStock.DoesNotExist:
+                        item.branch_quantity = 0
+                else:
+                    item.branch_quantity = 0
+            
             items_object[f"{category.name}"] = items
+
+        # Get branches (shops)
+        branches = Customer.objects.filter(is_shop=True)
 
         context.update({
             "items_object": items_object,
             "customers": Customer.objects.all(),
+            "branches": branches,
+            "selected_branch": selected_branch,
         })
         return context
 
@@ -86,11 +120,21 @@ class MakeOrderView(LoginRequiredMixin, TemplateView):
         customer = Customer.objects.get(id=customer_id)
         market_or_gomla = request.POST["market_or_gomla"]
         
+        # Get selected branch (Mandatory now)
+        branch_id = request.POST.get("branch")
+        if not branch_id:
+             # Fallback or error? Let's assume the form sends it.
+             # If missing, we might default to first shop or error.
+             # For robustness, try to get first shop.
+             branch = Customer.objects.filter(is_shop=True).first()
+        else:
+            branch = Customer.objects.get(id=branch_id)
+        
         check_order = False
         if market_or_gomla == "market":
-            order = Order.objects.create(customer=customer)
+            order = Order.objects.create(customer=customer, branch=branch)
         else:
-            order = Order.objects.create(customer=customer, is_gomla=True)
+            order = Order.objects.create(customer=customer, is_gomla=True, branch=branch)
         
         for category in items_object.values():
             for item in category:
@@ -174,6 +218,7 @@ class OrderInfoView(LoginRequiredMixin, DetailView):
         context = super().get_context_data(**kwargs)
         order = self.get_object()
         context['order_items'] = OrderItem.objects.filter(order=order)
+        context['payments'] = order.payments.all().order_by('-date')
         return context
 
     def get_object(self, queryset=None):
@@ -329,6 +374,7 @@ class EditOrderView(LoginRequiredMixin, DetailView):
             "order_items": OrderItem.objects.filter(order=order),
             "is_gomla": order.is_gomla,
             "message_edit": "تم حفظ التعديل",
+            "payments": order.payments.all().order_by('-date'),
         })
         return context
 
@@ -459,6 +505,7 @@ class ChangeRestView(LoginRequiredMixin, TemplateView):
         if order.rest_money - Decimal(rest_money) > Decimal(-1):
             order.rest_money -= Decimal(rest_money)
             order.save()
+            OrderPayment.objects.create(order=order, amount=Decimal(rest_money))
             return HttpResponseRedirect(f"/order_info/{order_id}")
         else:
             return render(request, self.template_name, {
@@ -825,19 +872,38 @@ def month_sales(request):
 
 @login_required(login_url="/login/")
 def coming_order(request):
-    items_object = {}
-    categories = Category.objects.all()
-    suppliers = Customer.objects.filter(is_supplier=True)
-    for category in categories:
-        items = Item.objects.filter(category=category).order_by('id')
-        items_object[f"{category.name}"] = items
-
     if request.method == 'GET':
         customers = Customer.objects.filter(is_shop=True)
+        suppliers = Customer.objects.filter(is_supplier=True)
+        
+        selected_branch_id = request.GET.get('customer')
+        selected_branch = None
+        if selected_branch_id:
+            try:
+                selected_branch = Customer.objects.get(id=selected_branch_id)
+            except Customer.DoesNotExist:
+                pass
+        
+        items_object = {}
+        categories = Category.objects.all()
+        for category in categories:
+            items = Item.objects.filter(category=category).order_by('id')
+            for item in items:
+                if selected_branch:
+                    try:
+                        stock = BranchStock.objects.get(branch=selected_branch, item=item)
+                        item.branch_quantity = stock.quantity
+                    except BranchStock.DoesNotExist:
+                        item.branch_quantity = 0
+                else:
+                    item.branch_quantity = 0
+            items_object[f"{category.name}"] = items
+
         return render(request, "main/create_store_order.html", {
             "items_object": items_object,
             "customers": customers,
             "suppliers": suppliers,
+            "selected_branch": selected_branch,
         })
         
     else:
@@ -849,18 +915,22 @@ def coming_order(request):
         check_order = False
         order = Store_Order.objects.create(customer=customer, supplier=supplier)
         
-        for category in items_object.values():
-            for item in category:
+        # We need to iterate over all items to check for quantities in POST
+        # Efficient way: iterate over POST keys
+        for key, value in request.POST.items():
+            if key.startswith('quantity_'):
                 try:
-                    quantity = int(request.POST[f"quantity_{item.id}"])
-                except ValueError:
-                    quantity = 0
-                if quantity > 0:
-                    Store_OrderItem.objects.create(
-                        order=order, item=item, quantity=quantity, single_real_price=item.real_price,
-                        single_gomla_price=item.gomla_price, single_market_price=item.market_price
-                    )
-                    check_order = True
+                    item_id = int(key.split('_')[1])
+                    quantity = int(value)
+                    if quantity > 0:
+                        item = Item.objects.get(id=item_id)
+                        Store_OrderItem.objects.create(
+                            order=order, item=item, quantity=quantity, single_real_price=item.real_price,
+                            single_gomla_price=item.gomla_price, single_market_price=item.market_price
+                        )
+                        check_order = True
+                except (ValueError, Item.DoesNotExist):
+                    continue
 
         if check_order == False:
             order.delete()
@@ -873,8 +943,51 @@ def coming_order(request):
         return HttpResponseRedirect(f"/coming_order/{order.id}")
 
 def add_coming_items(request, order_id):
-    # This will be converted later
-    pass
+    order = get_object_or_404(Store_Order, pk=order_id)
+    
+    if request.method == 'GET':
+        items_object = {}
+        categories = Category.objects.all()
+        branch = order.customer
+        
+        for category in categories:
+            items = Item.objects.filter(category=category).order_by('id')
+            for item in items:
+                try:
+                    stock = BranchStock.objects.get(branch=branch, item=item)
+                    item.branch_quantity = stock.quantity
+                except BranchStock.DoesNotExist:
+                    item.branch_quantity = 0
+            items_object[f"{category.name}"] = items
+            
+        return render(request, "main/create_store_order.html", {
+            "items_object": items_object,
+            "customer": branch,
+            "order": order,
+        })
+    
+    else:
+        check_order = False
+        for key, value in request.POST.items():
+            if key.startswith('quantity_'):
+                try:
+                    item_id = int(key.split('_')[1])
+                    quantity = int(value)
+                    if quantity > 0:
+                        item = Item.objects.get(id=item_id)
+                        Store_OrderItem.objects.create(
+                            order=order, item=item, quantity=quantity, single_real_price=item.real_price,
+                            single_gomla_price=item.gomla_price, single_market_price=item.market_price
+                        )
+                        check_order = True
+                except (ValueError, Item.DoesNotExist):
+                    continue
+        
+        if check_order:
+            order.is_done = False
+            order.save()
+            
+        return redirect('main:coming_order_info', order_id=order.id)
 
 @login_required(login_url="/login/")
 def coming_order_info(request, order_id):
@@ -1248,3 +1361,198 @@ class UpdateItemView(LoginRequiredMixin, View):
 class HelpView(LoginRequiredMixin, TemplateView):
     template_name = "main/help.html"
     login_url = "/login/"
+
+class MakeTransferView(LoginRequiredMixin, TemplateView):
+    template_name = "main/make_transfer.html"
+    login_url = "/login/"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Get selected 'from_branch' from GET request
+        from_branch_id = self.request.GET.get('from_branch')
+        from_branch = None
+        
+        if from_branch_id:
+            try:
+                from_branch = Customer.objects.get(id=from_branch_id, is_shop=True)
+            except Customer.DoesNotExist:
+                pass
+        
+        # Default to first branch if none selected (optional, but consistent with MakeOrder)
+        if not from_branch:
+             from_branch = Customer.objects.filter(is_shop=True).first()
+
+        items_object = {}
+        categories = Category.objects.all()
+        for category in categories:
+            items = Item.objects.filter(category=category).order_by('id')
+            
+            # Attach branch-specific quantity
+            for item in items:
+                if from_branch:
+                    try:
+                        stock = BranchStock.objects.get(branch=from_branch, item=item)
+                        item.branch_quantity = stock.quantity
+                    except BranchStock.DoesNotExist:
+                        item.branch_quantity = 0
+                else:
+                    # If "Main Store" (None) is selected or logic allows, 
+                    # but we are moving away from Main Store concept.
+                    # If from_branch is None, it implies Main Store if we kept it.
+                    # But user said "remove main branch".
+                    # So if no branch selected, 0 stock.
+                    item.branch_quantity = 0
+            
+            items_object[f"{category.name}"] = items
+
+        # Filter customers to only show shops (branches)
+        branches = Customer.objects.filter(is_shop=True)
+        
+        context.update({
+            "items_object": items_object,
+            "branches": branches,
+            "selected_from_branch": from_branch,
+        })
+        return context
+
+    def post(self, request, *args, **kwargs):
+        from_branch_id = request.POST.get("from_branch")
+        to_branch_id = request.POST.get("to_branch")
+        
+        from_branch = None
+        if from_branch_id:
+            from_branch = Customer.objects.get(id=from_branch_id)
+            
+        to_branch = None
+        if to_branch_id:
+            to_branch = Customer.objects.get(id=to_branch_id)
+            
+        # Create Transfer Order
+        transfer_order = TransferOrder.objects.create(
+            from_branch=from_branch,
+            to_branch=to_branch
+        )
+        
+        items_object = {}
+        categories = Category.objects.all()
+        for category in categories:
+            items = Item.objects.filter(category=category).order_by('id')
+            items_object[f"{category.name}"] = items
+
+        has_items = False
+        for category in items_object.values():
+            for item in category:
+                try:
+                    quantity = int(request.POST.get(f"quantity_{item.id}", 0))
+                except ValueError:
+                    quantity = 0
+                
+                if quantity > 0:
+                    TransferOrderItem.objects.create(
+                        transfer_order=transfer_order,
+                        item=item,
+                        quantity=quantity
+                    )
+                    has_items = True
+        
+        if not has_items:
+            transfer_order.delete()
+            messages.error(request, "لم يتم اختيار أي منتجات للنقل")
+            return redirect("main:make_transfer")
+            
+        messages.success(request, "تم تسجيل النقل بنجاح")
+        return redirect("main:transfer_history")
+
+class TransferHistoryView(LoginRequiredMixin, ListView):
+    model = TransferOrder
+    template_name = "main/transfer_history.html"
+    context_object_name = "transfers"
+    ordering = ["-created_at"]
+    login_url = "/login/"
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        start_date = self.request.GET.get("start_date")
+        end_date = self.request.GET.get("end_date")
+
+        if start_date:
+            queryset = queryset.filter(created_at__date__gte=start_date)
+        if end_date:
+            queryset = queryset.filter(created_at__date__lte=end_date)
+            
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["start_date"] = self.request.GET.get("start_date", "")
+        context["end_date"] = self.request.GET.get("end_date", "")
+        return context
+
+class BranchStockView(LoginRequiredMixin, TemplateView):
+    template_name = "main/branch_stock.html"
+    login_url = "/login/"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        branches = Customer.objects.filter(is_shop=True)
+        context['branches'] = branches
+        
+        selected_branch_id = self.request.GET.get('branch_id')
+        if selected_branch_id:
+            try:
+                branch = Customer.objects.get(id=selected_branch_id, is_shop=True)
+                context['selected_branch'] = branch
+                
+                # Fetch stock from BranchStock model
+                branch_stocks = BranchStock.objects.filter(branch=branch).select_related('item', 'item__category').order_by('item__category', 'item__name')
+                
+                branch_stock_list = []
+                for stock in branch_stocks:
+                    if stock.quantity > 0: # Only show items with stock
+                        branch_stock_list.append({
+                            'item': stock.item,
+                            'stock': stock.quantity
+                        })
+                
+                context['branch_stock'] = branch_stock_list
+                
+            except Customer.DoesNotExist:
+                pass
+            
+        return context
+
+class DeleteTransferView(LoginRequiredMixin, View):
+    login_url = "/login/"
+
+    def get(self, request, pk, *args, **kwargs):
+        transfer = get_object_or_404(TransferOrder, pk=pk)
+        
+        # Revert stock changes
+        # Logic:
+        # Transfer was: Source -> Dest
+        # Revert: Source gets stock back (+), Dest loses stock (-)
+        
+        for item in transfer.items.all():
+            # Revert Source Stock
+            if transfer.from_branch:
+                source_stock, _ = BranchStock.objects.get_or_create(branch=transfer.from_branch, item=item.item)
+                source_stock.quantity += item.quantity
+                source_stock.save()
+            
+            # Revert Dest Stock
+            if transfer.to_branch:
+                dest_stock, _ = BranchStock.objects.get_or_create(branch=transfer.to_branch, item=item.item)
+                # Ensure we don't go negative (though logic implies we have it)
+                if dest_stock.quantity >= item.quantity:
+                    dest_stock.quantity -= item.quantity
+                else:
+                    dest_stock.quantity = 0
+                dest_stock.save()
+            
+            # Update global item stock if needed (though we rely on BranchStock now)
+            item.item.update_item()
+
+        transfer.delete()
+        messages.success(request, "تم حذف التحويل واسترجاع الكميات بنجاح")
+        return redirect("main:transfer_history")

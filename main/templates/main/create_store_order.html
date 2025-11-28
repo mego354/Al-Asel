@@ -6,15 +6,17 @@
 <nav class="flex mb-6" aria-label="Breadcrumb">
   <ol class="inline-flex items-center space-x-1 space-x-reverse md:space-x-2 md:space-x-reverse">
     <li class="inline-flex items-center">
-      <a href="{% url 'main:make_order' %}" class="text-sm font-medium text-gray-700 hover:text-primary">الصفحة الرئيسية</a>
+      <a href="{% url 'main:make_order' %}" class="text-sm font-medium text-gray-700 hover:text-primary">الصفحة
+        الرئيسية</a>
     </li>
     <li>
       <div class="flex items-center">
         <i class="fa-solid fa-chevron-left text-gray-400 mx-1"></i>
         {% if customer %}
-          <a href="{% url 'main:coming_order' %}" class="ml-1 text-sm font-medium text-gray-700 hover:text-primary md:ml-2">إدخال طلبية</a>
+        <a href="{% url 'main:coming_order' %}"
+          class="ml-1 text-sm font-medium text-gray-700 hover:text-primary md:ml-2">إدخال طلبية</a>
         {% else %}
-          <span class="ml-1 text-sm font-medium text-primary md:ml-2">إدخال طلبية</span>
+        <span class="ml-1 text-sm font-medium text-primary md:ml-2">إدخال طلبية</span>
         {% endif %}
       </div>
     </li>
@@ -22,7 +24,8 @@
     <li>
       <div class="flex items-center">
         <i class="fa-solid fa-chevron-left text-gray-400 mx-1"></i>
-        <a href="{% url 'main:coming_order_info' order.id %}" class="ml-1 text-sm font-medium text-gray-700 hover:text-primary md:ml-2">طلبية رقم {{ order.id }}</a>
+        <a href="{% url 'main:coming_order_info' order.id %}"
+          class="ml-1 text-sm font-medium text-gray-700 hover:text-primary md:ml-2">طلبية رقم {{ order.id }}</a>
       </div>
     </li>
     <li>
@@ -41,16 +44,16 @@
     <h1 class="text-2xl font-semibold text-gray-900 flex items-center">
       <i class="fa-solid fa-truck text-primary ml-2"></i>
       {% if customer %}
-        إضافة منتجات لطلبية {{ customer.name }}
+      إضافة منتجات لطلبية {{ customer.name }}
       {% else %}
-        إدخال طلبية جديدة
+      إدخال طلبية جديدة
       {% endif %}
     </h1>
     <p class="text-gray-600 mt-2">
       {% if customer %}
-        إضافة منتجات جديدة للطلبية
+      إضافة منتجات جديدة للطلبية
       {% else %}
-        إنشاء طلبية جديدة من المورد للفرع
+      إنشاء طلبية جديدة من المورد للفرع
       {% endif %}
     </p>
   </div>
@@ -58,154 +61,159 @@
 
 <!-- Form -->
 {% if customer %}
-  <form action="{% url 'main:add_coming_items' order.id %}" method="post">
-{% else %}
+<form action="{% url 'main:add_coming_items' order.id %}" method="post">
+  {% else %}
   <form action="{% url 'main:coming_order' %}" method="post">
-{% endif %}
-  {% csrf_token %}
+    {% endif %}
+    {% csrf_token %}
 
-  <!-- Customer/Supplier Selection (only for new orders) -->
-  {% if not customer %}
-  <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
-    <div class="p-6">
-      <h2 class="text-lg font-semibold text-gray-900 mb-4">اختيار المورد والفرع</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- Supplier Selection -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">المورد</label>
-          <select 
-            name="supplier" 
-            required
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-          >
-            <option value="">اختر المورد</option>
-            {% for supplier in suppliers %}
+    <!-- Customer/Supplier Selection (only for new orders) -->
+    {% if not customer %}
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+      <div class="p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">اختيار المورد والفرع</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Supplier Selection -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">المورد</label>
+            <select name="supplier" required
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+              <option value="">اختر المورد</option>
+              {% for supplier in suppliers %}
               <option value="{{ supplier.id }}">{{ supplier.id }} - {{ supplier.name }}</option>
-            {% endfor %}
-          </select>
-        </div>
+              {% endfor %}
+            </select>
+          </div>
 
-        <!-- Customer Selection -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">الفرع</label>
-          <select 
-            name="customer" 
-            required
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-          >
-            <option value="">اختر الفرع</option>
-            {% for customer in customers %}
-              <option value="{{ customer.id }}">{{ customer.id }} - {{ customer.name }}</option>
-            {% endfor %}
-          </select>
+          <!-- Customer Selection -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">الفرع</label>
+            <select name="customer" required onchange="window.location.href='?customer=' + this.value + '&supplier=' + (document.querySelector('select[name=supplier]').value || '')"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+              <option value="">اختر الفرع</option>
+              {% for cust in customers %}
+              <option value="{{ cust.id }}" {% if selected_branch.id == cust.id %}selected{% endif %}>{{ cust.id }} - {{ cust.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-  {% endif %}
+    {% endif %}
 
-  <!-- Categories and Items -->
-  <div class="space-y-6">
-    {% for category, items in items_object.items %}
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-      <!-- Category Header -->
-      <div class="category-header bg-gray-50 px-6 py-4 border-b border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors" data-code="{{category}}">
-        <div class="flex items-center justify-between">
-          <h3 class="text-lg font-semibold text-gray-900">{{category}}</h3>
-          <span class="toggle-icon text-primary" data-toggle="{{category}}">
-            <i class="fa-solid fa-angle-down transition-transform duration-200"></i>
-          </span>
+    <!-- Categories and Items -->
+    <div class="space-y-6">
+      <!-- Search Input -->
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+        <div class="relative">
+          <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+            <i class="fa-solid fa-search text-gray-400"></i>
+          </div>
+          <input type="text" id="product-search"
+            class="block w-full pr-10 pl-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
+            placeholder="بحث عن منتج...">
         </div>
       </div>
-      
-      <!-- Items Container -->
-      <div id="{{category}}" class="items-container p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {% for item in items %}
-        <div class="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow">
-          <!-- Item Header -->
-          <div class="p-4 border-b border-gray-100">
-            <h4 class="text-right font-semibold text-gray-900 text-lg">{{ item.name }}</h4>
-          </div>
-          
-          <!-- Item Details -->
-          <div class="p-4 space-y-4">
-            <!-- Quantity Input -->
-            <div class="flex items-center justify-between">
-              <label class="text-sm font-medium text-gray-700">العدد:</label>
-              <input 
-                type="number" 
-                name="quantity_{{ item.id }}" 
-                placeholder="الكمية" 
-                value="0" 
-                min="0"
-                class="w-20 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-center"
-              >
-            </div>
-          </div>
-          
-          <!-- Item Footer -->
-          <div class="px-4 py-3 bg-gray-50 border-t border-gray-100">
-            <div class="text-right">
-              <small class="text-sm text-gray-500 stock" data-quantity="{{ item.quantity }}">
-                المخزون الحالي: <span class="font-medium">{{ item.quantity }}</span>
-              </small>
-            </div>
+
+      {% for category, items in items_object.items %}
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 category-container">
+        <!-- Category Header -->
+        <div
+          class="category-header bg-gray-50 px-6 py-4 border-b border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors"
+          data-code="{{category}}">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-gray-900">{{category}}</h3>
+            <span class="toggle-icon text-primary" data-toggle="{{category}}">
+              <i class="fa-solid fa-angle-down transition-transform duration-200"></i>
+            </span>
           </div>
         </div>
-        {% endfor %}
+
+        <!-- Items Container -->
+        <div id="{{category}}"
+          class="items-container p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {% for item in items %}
+          <div class="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow item-card">
+            <!-- Item Header -->
+            <div class="p-4 border-b border-gray-100">
+              <h4 class="text-right font-semibold text-gray-900 text-lg item-name">{{ item.name }}</h4>
+            </div>
+
+            <!-- Item Details -->
+            <div class="p-4 space-y-4">
+              <!-- Quantity Input -->
+              <div class="flex items-center justify-between">
+                <label class="text-sm font-medium text-gray-700">العدد:</label>
+                <input type="number" name="quantity_{{ item.id }}" placeholder="الكمية" value="0" min="0"
+                  class="w-20 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-center">
+              </div>
+            </div>
+
+            <!-- Item Footer -->
+            <div class="px-4 py-3 bg-gray-50 border-t border-gray-100">
+              <div class="text-right">
+                <small class="text-sm text-gray-500 stock" data-quantity="{{ item.branch_quantity }}">
+                  المخزون الحالي: <span class="font-medium">{{ item.branch_quantity }}</span>
+                </small>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
       </div>
+      {% endfor %}
     </div>
-    {% endfor %}
-  </div>
 
-  <!-- Submit Button -->
-  <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-6">
-    <div class="flex justify-center">
-      {% if customer %}
-        <button type="submit" class="bg-primary hover:bg-primary/90 text-white font-medium py-3 px-8 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+    <!-- Submit Button -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mt-6">
+      <div class="flex justify-center">
+        {% if customer %}
+        <button type="submit"
+          class="bg-primary hover:bg-primary/90 text-white font-medium py-3 px-8 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
           <i class="fa-solid fa-plus ml-2"></i>
           إضافة لفرع {{ customer.name }}
         </button>
-      {% else %}
-        <button type="submit" class="bg-primary hover:bg-primary/90 text-white font-medium py-3 px-8 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+        {% else %}
+        <button type="submit"
+          class="bg-primary hover:bg-primary/90 text-white font-medium py-3 px-8 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
           <i class="fa-solid fa-truck ml-2"></i>
           تسجيل الطلبية
         </button>
-      {% endif %}
+        {% endif %}
+      </div>
     </div>
-  </div>
-</form>
+  </form>
 
-<script src="{% static 'main/make.js' %}"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  // Category toggle functionality
-  document.querySelectorAll('.category-header').forEach(category => {
-    category.addEventListener('click', hide_category);
-  });
+  <script src="{% static 'main/makee.js' %}"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      // Category toggle functionality
+      document.querySelectorAll('.category-header').forEach(category => {
+        category.addEventListener('click', hide_category);
+      });
 
-  // Stock availability display
-  document.querySelectorAll('.stock').forEach(stock => {
-    if (stock.dataset.quantity === "0") {
-      stock.innerHTML = "غير متوفر";
-      stock.classList.add('text-red-500');
+      // Stock availability display
+      document.querySelectorAll('.stock').forEach(stock => {
+        if (stock.dataset.quantity === "0") {
+          stock.innerHTML = "غير متوفر";
+          stock.classList.add('text-red-500');
+        }
+      });
+    });
+
+    function hide_category() {
+      const icon = document.querySelector(`.toggle-icon[data-toggle="${this.dataset.code}"] i`);
+      const categoryBlock = document.querySelector(`#${this.dataset.code}`);
+
+      if (categoryBlock.classList.contains('hidden')) {
+        categoryBlock.classList.remove('hidden');
+        icon.classList.remove("fa-angle-up");
+        icon.classList.add("fa-angle-down");
+      } else {
+        categoryBlock.classList.add('hidden');
+        icon.classList.remove("fa-angle-down");
+        icon.classList.add("fa-angle-up");
+      }
     }
-  });
-});
-
-function hide_category() {
-  const icon = document.querySelector(`.toggle-icon[data-toggle="${this.dataset.code}"] i`);
-  const categoryBlock = document.querySelector(`#${this.dataset.code}`);
-  
-  if (categoryBlock.classList.contains('hidden')) {
-    categoryBlock.classList.remove('hidden');
-    icon.classList.remove("fa-angle-up");
-    icon.classList.add("fa-angle-down");
-  } else {
-    categoryBlock.classList.add('hidden');
-    icon.classList.remove("fa-angle-down");
-    icon.classList.add("fa-angle-up");
-  }
-}
-</script>
+  </script>
 {% endblock %}

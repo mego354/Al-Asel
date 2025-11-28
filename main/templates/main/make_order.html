@@ -6,7 +6,8 @@
 <nav class="flex mb-6" aria-label="Breadcrumb">
   <ol class="inline-flex items-center space-x-1 space-x-reverse md:space-x-2 md:space-x-reverse">
     <li class="inline-flex items-center">
-      <a href="{% url 'main:coming_order' %}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-primary">
+      <a href="{% url 'main:coming_order' %}"
+        class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-primary">
         <i class="fa-solid fa-plus-circle w-4 h-4 ml-2"></i>
         ادخال طلبية
       </a>
@@ -23,13 +24,27 @@
 <!-- Order Form -->
 <form action="{% url 'main:make_order' %}" method="post" class="space-y-6">
   {% csrf_token %}
-  
+
   <!-- Categories and Items -->
   <div class="space-y-6">
+    <!-- Search Input -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
+      <div class="relative">
+        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+          <i class="fa-solid fa-search text-gray-400"></i>
+        </div>
+        <input type="text" id="product-search"
+          class="block w-full pr-10 pl-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm"
+          placeholder="بحث عن منتج...">
+      </div>
+    </div>
+
     {% for category, items in items_object.items %}
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 category-container">
       <!-- Category Header -->
-      <div class="category-header bg-gray-50 px-6 py-4 border-b border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors" data-code="{{category}}">
+      <div
+        class="category-header bg-gray-50 px-6 py-4 border-b border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors"
+        data-code="{{category}}">
         <div class="flex items-center justify-between">
           <h3 class="text-lg font-semibold text-gray-900">{{category}}</h3>
           <span class="toggle-icon text-primary" data-toggle="{{category}}">
@@ -37,16 +52,17 @@
           </span>
         </div>
       </div>
-      
+
       <!-- Items Container -->
-      <div id="{{category}}" class="items-container p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div id="{{category}}"
+        class="items-container p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {% for item in items %}
-        <div class="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow">
+        <div class="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow item-card">
           <!-- Item Header -->
           <div class="p-4 border-b border-gray-100">
-            <h4 class="text-right font-semibold text-gray-900 text-lg">{{ item.name }}</h4>
+            <h4 class="text-right font-semibold text-gray-900 text-lg item-name">{{ item.name }}</h4>
           </div>
-          
+
           <!-- Item Details -->
           <div class="p-4 space-y-3">
             <div class="flex justify-between items-center">
@@ -57,30 +73,24 @@
               <span class="text-sm text-gray-600">الجملة:</span>
               <span class="font-medium text-primary">{{ item.gomla_price|stringformat:'.2f' }} ج.م</span>
             </div>
-            
+
             <!-- Quantity Input -->
             <div class="pt-2">
-              <input 
-                type="number" 
-                name="quantity_{{ item.id }}" 
-                placeholder="الكمية" 
-                value="0" 
-                min="0" 
-                max="{{ item.quantity }}"
+              <input type="number" name="quantity_{{ item.id }}" placeholder="الكمية" value="0" min="0"
+                max="{{ item.branch_quantity }}"
                 class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-center"
-                oninput="if(typeof calculateTotal === 'function') { calculateTotal(); } else if(typeof calculateTotalFallback === 'function') { calculateTotalFallback(); } else { console.error('No calculateTotal function available'); }" 
+                oninput="if(typeof calculateTotal === 'function') { calculateTotal(); } else if(typeof calculateTotalFallback === 'function') { calculateTotalFallback(); } else { console.error('No calculateTotal function available'); }"
                 onchange="if(typeof calculateTotal === 'function') { calculateTotal(); } else if(typeof calculateTotalFallback === 'function') { calculateTotalFallback(); } else { console.error('No calculateTotal function available'); }"
                 data-market-price="{{ item.market_price|stringformat:'.2f' }}"
-                data-gomla-price="{{ item.gomla_price|stringformat:'.2f' }}"
-              >
+                data-gomla-price="{{ item.gomla_price|stringformat:'.2f' }}">
             </div>
           </div>
-          
+
           <!-- Item Footer -->
           <div class="px-4 py-3 bg-gray-50 border-t border-gray-100">
             <div class="text-right">
-              <small class="text-sm text-gray-500 stock" data-quantity="{{ item.quantity }}">
-                المخزون: <span class="font-medium">{{ item.quantity }}</span>
+              <small class="text-sm text-gray-500 stock" data-quantity="{{ item.branch_quantity }}">
+                المخزون: <span class="font-medium">{{ item.branch_quantity }}</span>
               </small>
             </div>
           </div>
@@ -97,9 +107,21 @@
       <!-- Customer Selection -->
       <div class="flex items-center space-x-4 space-x-reverse">
         <label class="text-lg font-medium text-primary whitespace-nowrap">العميل:</label>
-        <select name="customer" class="flex-1 px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+        <select name="customer"
+          class="flex-1 px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
           {% for customer in customers %}
-            <option value="{{customer.id}}">{{customer}}</option>
+          <option value="{{customer.id}}">{{customer}}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Branch Selection -->
+      <div class="flex items-center space-x-4 space-x-reverse">
+        <label class="text-lg font-medium text-primary whitespace-nowrap">الفرع (البائع):</label>
+        <select name="branch" id="branch-selector" onchange="window.location.href='?branch=' + this.value"
+          class="flex-1 px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+          {% for branch in branches %}
+          <option value="{{branch.id}}" {% if selected_branch.id == branch.id %}selected{% endif %}>{{branch.name}}</option>
           {% endfor %}
         </select>
       </div>
@@ -109,11 +131,15 @@
         <span class="text-lg font-medium text-gray-700">نوع الطلب:</span>
         <div class="flex items-center space-x-4 space-x-reverse">
           <label class="flex items-center space-x-2 space-x-reverse cursor-pointer">
-            <input type="radio" id="market" name="market_or_gomla" value="market" checked="checked" class="h-4 w-4 text-primary focus:ring-primary border-gray-300" onchange="if(typeof calculateTotal === 'function') { calculateTotal(); } else if(typeof calculateTotalFallback === 'function') { calculateTotalFallback(); } else { console.error('No calculateTotal function available'); }">
+            <input type="radio" id="market" name="market_or_gomla" value="market" checked="checked"
+              class="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+              onchange="if(typeof calculateTotal === 'function') { calculateTotal(); } else if(typeof calculateTotalFallback === 'function') { calculateTotalFallback(); } else { console.error('No calculateTotal function available'); }">
             <span class="text-sm font-medium text-gray-700">ماركت</span>
           </label>
           <label class="flex items-center space-x-2 space-x-reverse cursor-pointer">
-            <input type="radio" id="gomla" name="market_or_gomla" value="gomla" class="h-4 w-4 text-primary focus:ring-primary border-gray-300" onchange="if(typeof calculateTotal === 'function') { calculateTotal(); } else if(typeof calculateTotalFallback === 'function') { calculateTotalFallback(); } else { console.error('No calculateTotal function available'); }">
+            <input type="radio" id="gomla" name="market_or_gomla" value="gomla"
+              class="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+              onchange="if(typeof calculateTotal === 'function') { calculateTotal(); } else if(typeof calculateTotalFallback === 'function') { calculateTotalFallback(); } else { console.error('No calculateTotal function available'); }">
             <span class="text-sm font-medium text-gray-700">جملة</span>
           </label>
         </div>
@@ -136,7 +162,8 @@
 
       <!-- Submit Button -->
       <div class="flex justify-center pt-4">
-        <button type="submit" class="bg-primary hover:bg-primary/90 text-white font-medium py-3 px-8 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+        <button type="submit"
+          class="bg-primary hover:bg-primary/90 text-white font-medium py-3 px-8 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
           <i class="fa-solid fa-check ml-2"></i>
           تسجيل الطلب
         </button>
@@ -145,5 +172,5 @@
   </div>
 </form>
 
-<script src="{% static 'main/make.js' %}"></script>
+<script src="{% static 'main/makee.js' %}"></script>
 {% endblock %}

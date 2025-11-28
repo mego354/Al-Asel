@@ -106,6 +106,42 @@
     </div>
     {% endif %}
 
+    <!-- Payment History -->
+    {% if payments %}
+    <div class="mb-6 bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+      <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+        <h3 class="text-lg font-medium text-gray-900">
+          <i class="fa-solid fa-history ml-2 text-gray-400"></i>
+          سجل المدفوعات
+        </h3>
+        <span class="text-sm text-gray-500">{{ payments.count }} عملية دفع</span>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المبلغ المدفوع</th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">تاريخ الدفع</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            {% for payment in payments %}
+            <tr class="hover:bg-gray-50 transition-colors">
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-bold">
+                <i class="fa-solid fa-arrow-down ml-1"></i>
+                {{ payment.amount }} ج.م
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" dir="ltr">
+                {{ payment.date|date:"Y-m-d h:i A" }}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
     <!-- Discount Section -->
     {% if order_items %}
     <div class="mb-6 p-4 bg-blue-50 rounded-lg">
@@ -217,6 +253,12 @@
          class="px-6 py-2 bg-yellow-600 hover:bg-yellow-700 text-white font-medium rounded-lg transition-colors">
         <i class="fa-solid fa-plus ml-2"></i>
         إضافة قسط
+      </a>
+      {% else %}
+      <a href="{% url 'main:change_rest' %}?order_id={{order.id}}" 
+         class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors">
+        <i class="fa-solid fa-money-bill-wave ml-2"></i>
+        دفع قسط
       </a>
       {% endif %}
 

@@ -1,0 +1,135 @@
+{% extends "main/layout.html" %}
+{% load static %}
+
+{% block body %}
+<!-- Breadcrumb -->
+<nav class="flex mb-6" aria-label="Breadcrumb">
+  <ol class="inline-flex items-center space-x-1 space-x-reverse md:space-x-2 md:space-x-reverse">
+    <li class="inline-flex items-center">
+      <a href="{% url 'main:make_order' %}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-primary">
+        <i class="fa-solid fa-home w-4 h-4 ml-2"></i>
+        الرئيسية
+      </a>
+    </li>
+    <li>
+      <div class="flex items-center">
+        <i class="fa-solid fa-chevron-left text-gray-400 mx-1"></i>
+        <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2">مخزون الفروع</span>
+      </div>
+    </li>
+  </ol>
+</nav>
+
+<!-- Main Content -->
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-bold text-gray-900">مخزون الفروع</h1>
+        <p class="text-gray-500 mt-1">عرض ومتابعة مخزون المنتجات في كل فرع</p>
+      </div>
+      
+      <!-- Branch Selector -->
+      <form method="get" class="flex items-center gap-2">
+        <label for="branch_id" class="text-sm font-medium text-gray-700 whitespace-nowrap">اختر الفرع:</label>
+        <select name="branch_id" id="branch_id" onchange="this.form.submit()" 
+          class="block w-full md:w-64 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md">
+          <option value="">-- اختر الفرع --</option>
+          {% for branch in branches %}
+          <option value="{{ branch.id }}" {% if selected_branch.id == branch.id %}selected{% endif %}>
+            {{ branch.name }}
+          </option>
+          {% endfor %}
+        </select>
+      </form>
+    </div>
+  </div>
+
+  {% if selected_branch %}
+  <!-- Stock Table -->
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+    <div class="p-6 border-b border-gray-200">
+      <h2 class="text-lg font-semibold text-gray-900">
+        مخزون فرع: <span class="text-primary">{{ selected_branch.name }}</span>
+      </h2>
+    </div>
+    
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              المنتج
+            </th>
+            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              النوع
+            </th>
+            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              الكمية الحالية
+            </th>
+            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              الحالة
+            </th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          {% for item_stock in branch_stock %}
+          <tr class="hover:bg-gray-50 transition-colors">
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="text-sm font-medium text-gray-900">{{ item_stock.item.name }}</div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                {{ item_stock.item.category.name }}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <div class="text-sm font-bold {% if item_stock.stock > 10 %}text-green-600{% elif item_stock.stock > 0 %}text-yellow-600{% else %}text-red-600{% endif %}">
+                {{ item_stock.stock }}
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              {% if item_stock.stock > 10 %}
+              <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                متوفر
+              </span>
+              {% elif item_stock.stock > 0 %}
+              <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                منخفض
+              </span>
+              {% else %}
+              <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                نفذ
+              </span>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="4" class="px-6 py-12 text-center text-gray-500">
+              <div class="flex flex-col items-center justify-center">
+                <i class="fa-solid fa-box-open text-4xl mb-3 text-gray-300"></i>
+                <p>لا يوجد مخزون مسجل لهذا الفرع حالياً</p>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% else %}
+  <!-- Empty State -->
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
+    <div class="flex flex-col items-center justify-center max-w-md mx-auto">
+      <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+        <i class="fa-solid fa-store text-2xl text-primary"></i>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 mb-2">اختر فرعاً لعرض المخزون</h3>
+      <p class="text-gray-500">يرجى اختيار أحد الفروع من القائمة أعلاه لعرض تفاصيل المخزون والمنتجات المتوفرة.</p>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

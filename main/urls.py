@@ -46,9 +46,15 @@ urlpatterns = [
     path("manage/items/<int:item_id>/delete", views.DeleteItemView.as_view(), name="delete_item"),
     path("manage/categories/<int:category_id>/update", views.UpdateCategoryView.as_view(), name="update_category"),
     path("manage/items/<int:item_id>/update", views.UpdateItemView.as_view(), name="update_item_management"),
+    
+    # Transfer URLs
+    path("transfer/make/", views.MakeTransferView.as_view(), name="make_transfer"),
+    path("transfer/history/", views.TransferHistoryView.as_view(), name="transfer_history"),
+    path("transfer/stock/", views.BranchStockView.as_view(), name="branch_stock"),
+    path("transfer/<int:pk>/delete/", views.DeleteTransferView.as_view(), name="delete_transfer"),
+
     # Help page
     path("help", views.HelpView.as_view(), name="help"),
     ###################### api ######################         
     path("users_search/<str:text>", views.UsersSearchView.as_view(), name="users_search"),
 ]
- 
