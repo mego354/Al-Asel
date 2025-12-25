@@ -3,6 +3,7 @@ from django.contrib.auth.models import AbstractUser
 from datetime import datetime
 from pytz import timezone
 from django.db import models
+from decimal import Decimal
 
 class Customer(models.Model):
     name = models.CharField(max_length=64)
@@ -45,6 +46,7 @@ class Order(models.Model):
             MaxValueValidator(100)
         ])
     is_gomla = models.BooleanField(default=False)
+    is_gomla_gomla = models.BooleanField(default=False)
     is_used = models.BooleanField(default=True)
     is_fully_paid = models.BooleanField(default=True)
     rest_money = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True, blank=True)
@@ -58,7 +60,9 @@ class Order(models.Model):
 
     def get_price(self, name):
         if name == "actual_price":
-            if self.is_gomla:
+            if self.is_gomla_gomla:
+                return sum(item_order.gomla_gomla_price for item_order in self.order_items.all())
+            elif self.is_gomla:
                 return sum(item_order.gomla_price for item_order in self.order_items.all()) 
             else:
                 return sum(item_order.market_price for item_order in self.order_items.all())
@@ -107,6 +111,11 @@ class Order(models.Model):
         self.save()
 
 
+    def delete(self, *args, **kwargs):
+        for item in self.order_items.all():
+            item.delete()
+        super().delete(*args, **kwargs)
+
     def __str__(self):
         return f"#{self.id} for {self.customer} ({self.total_real_price}) pound"
 
@@ -132,6 +141,7 @@ class Item(models.Model):
     name = models.CharField(max_length=64, unique=True)
     real_price = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(0.00)])
     gomla_price = models.DecimalField(max_digits=6, decimal_places=2, validators=[MinValueValidator(0.00)])
+    gomla_gomla_price = models.DecimalField(max_digits=6, decimal_places=2, validators=[MinValueValidator(0.00)], default=0)
     market_price = models.DecimalField(max_digits=6, decimal_places=2, validators=[MinValueValidator(0.00)])
     stock_quantity = models.PositiveIntegerField(default = 0)
     used_quantity = models.PositiveIntegerField(default = 0)
@@ -166,6 +176,7 @@ class OrderItem(models.Model):
     quantity = models.PositiveIntegerField()
     real_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     gomla_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    gomla_gomla_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     market_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     profit = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True, blank=True)
 
@@ -173,28 +184,35 @@ class OrderItem(models.Model):
     def save(self, *args, **kwargs):
         self.real_price = self.quantity * self.item.real_price
         self.gomla_price = self.quantity * self.item.gomla_price
+        self.gomla_gomla_price = self.quantity * self.item.gomla_gomla_price
         self.market_price = self.quantity * self.item.market_price
-        if self.order.is_gomla:
+        
+        if self.order.is_gomla_gomla:
+            self.profit = self.gomla_gomla_price - self.real_price
+        elif self.order.is_gomla:
             self.profit = self.gomla_price - self.real_price
         else:
             self.profit = self.market_price - self.real_price
             
-        # Update Branch Stock
-        if self.pk is None: # Only on create
-            if self.order.branch:
-                branch_stock, _ = BranchStock.objects.get_or_create(branch=self.order.branch, item=self.item)
-                if branch_stock.quantity >= self.quantity:
-                    branch_stock.quantity -= self.quantity
-                    branch_stock.save()
-                else:
-                    # Handle insufficient stock? For now, allow negative or just 0? 
-                    # User didn't specify, but usually we shouldn't allow selling what we don't have.
-                    # For simplicity in this migration, let's allow it to go to 0 or negative if we change model, 
-                    # but PositiveIntegerField will raise error.
-                    # Let's assume validation happens in View.
-                    # For now, we just subtract. If it fails, it fails.
-                    branch_stock.quantity = max(0, branch_stock.quantity - self.quantity)
-                    branch_stock.save()
+        # Update Branch Stock Logic
+        if self.order.branch:
+            branch_stock, _ = BranchStock.objects.get_or_create(branch=self.order.branch, item=self.item)
+            
+            # If updating, revert previous quantity first
+            if self.pk:
+                try:
+                    old_instance = OrderItem.objects.get(pk=self.pk)
+                    branch_stock.quantity += old_instance.quantity
+                except OrderItem.DoesNotExist:
+                    pass # Should not happen, but safe fallback
+            
+            # Subtract new quantity
+            if branch_stock.quantity >= self.quantity:
+                branch_stock.quantity -= self.quantity
+            else:
+                branch_stock.quantity = 0
+            
+            branch_stock.save()
         
         super().save(*args, **kwargs)
 
@@ -202,8 +220,23 @@ class OrderItem(models.Model):
         self.item.update_item()
         self.order.update_same_disc()
 
+    def delete(self, *args, **kwargs):
+        # Revert Stock Logic
+        if self.order.branch:
+            branch_stock, _ = BranchStock.objects.get_or_create(branch=self.order.branch, item=self.item)
+            branch_stock.quantity += self.quantity
+            branch_stock.save()
+        
+        super().delete(*args, **kwargs)
+        
+        # Update Order
+        self.item.update_item()
+        self.order.update_same_disc()
+
     def update_profit(self):
-        if self.order.is_gomla:
+        if self.order.is_gomla_gomla:
+            self.profit = (self.gomla_gomla_price / 100 * (100 - self.order.discount)) - self.real_price
+        elif self.order.is_gomla:
             self.profit = (self.gomla_price / 100 * (100 - self.order.discount)) - self.real_price
         else:
             self.profit = self.market_price - self.real_price
@@ -243,6 +276,14 @@ class Store_Order(models.Model):
 
         
 
+class SupplyTransaction(models.Model):
+    order = models.ForeignKey(Store_Order, on_delete=models.CASCADE, related_name="transactions")
+    value = models.DecimalField(max_digits=10, decimal_places=2)
+    date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.value} for Order #{self.order.id}"
+
 class Store_OrderItem(models.Model):
     order = models.ForeignKey(Store_Order, on_delete=models.CASCADE, related_name='order_items')
     item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='order_items')
@@ -250,24 +291,49 @@ class Store_OrderItem(models.Model):
 
     total_real_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     total_gomla_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    total_gomla_gomla_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     total_market_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
 
     single_real_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     single_gomla_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    single_gomla_gomla_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     single_market_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
 
     change_real_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     change_gomla_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    change_gomla_gomla_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     change_market_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
 
     def save(self, *args, **kwargs):
+        # Defensive: Ensure prices are not None
+        if self.single_real_price is None: self.single_real_price = Decimal(0)
+        if self.single_gomla_price is None: self.single_gomla_price = Decimal(0)
+        if self.single_gomla_gomla_price is None: self.single_gomla_gomla_price = Decimal(0)
+        if self.single_market_price is None: self.single_market_price = Decimal(0)
+
+        # Defensive: Ensure quantities/prices on item are not None (for change calculation)
+        if self.item.real_price is None: self.item.real_price = Decimal(0)
+        if self.item.gomla_price is None: self.item.gomla_price = Decimal(0)
+        if self.item.gomla_gomla_price is None: self.item.gomla_gomla_price = Decimal(0)
+        if self.item.market_price is None: self.item.market_price = Decimal(0)
+
         self.total_real_price = self.quantity * self.single_real_price
         self.total_gomla_price = self.quantity * self.single_gomla_price
+        self.total_gomla_gomla_price = self.quantity * self.single_gomla_gomla_price
         self.total_market_price = self.quantity * self.single_market_price
 
         self.change_real_price = self.single_real_price - self.item.real_price
         self.change_gomla_price = self.single_gomla_price - self.item.gomla_price
+        self.change_gomla_gomla_price = self.single_gomla_gomla_price - self.item.gomla_gomla_price
         self.change_market_price = self.single_market_price - self.item.market_price
+
+        # If updating, revert previous effect
+        if self.pk:
+            try:
+                old_instance = Store_OrderItem.objects.get(pk=self.pk)
+                old_instance.update_item_prices(reverse=True)
+            except Store_OrderItem.DoesNotExist:
+                pass
 
         super().save(*args, **kwargs)
 
@@ -283,9 +349,10 @@ class Store_OrderItem(models.Model):
         else:
             factor = 1
 
-        self.item.real_price += factor * self.change_real_price
-        self.item.gomla_price += factor * self.change_gomla_price
-        self.item.market_price += factor * self.change_market_price
+        self.item.real_price += factor * (self.change_real_price or Decimal(0))
+        self.item.gomla_price += factor * (self.change_gomla_price or Decimal(0))
+        self.item.gomla_gomla_price += factor * (self.change_gomla_gomla_price or Decimal(0))
+        self.item.market_price += factor * (self.change_market_price or Decimal(0))
         
         # Update Branch Stock
         branch = self.order.customer # The shop receiving the order
@@ -315,6 +382,11 @@ class TransferOrder(models.Model):
             self.created_at = datetime.now(timezone('Egypt'))
         super().save(*args, **kwargs)
 
+    def delete(self, *args, **kwargs):
+        for item in self.items.all():
+            item.delete()
+        super().delete(*args, **kwargs)
+
     def __str__(self):
         source = self.from_branch.name if self.from_branch else "Main Store"
         dest = self.to_branch.name if self.to_branch else "Main Store"
@@ -326,8 +398,44 @@ class TransferOrderItem(models.Model):
     quantity = models.PositiveIntegerField()
 
     def save(self, *args, **kwargs):
+        # Revert old stock if updating
+        if self.pk:
+            old = TransferOrderItem.objects.get(pk=self.pk)
+            # Revert Source (Add back)
+            if self.transfer_order.from_branch:
+                src_stock, _ = BranchStock.objects.get_or_create(branch=self.transfer_order.from_branch, item=self.item)
+                src_stock.quantity += old.quantity
+                src_stock.save()
+            # Revert Dest (Subtract)
+            if self.transfer_order.to_branch:
+                dest_stock, _ = BranchStock.objects.get_or_create(branch=self.transfer_order.to_branch, item=self.item)
+                if dest_stock.quantity >= old.quantity:
+                    dest_stock.quantity -= old.quantity
+                else:
+                    dest_stock.quantity = 0
+                dest_stock.save()
+
         super().save(*args, **kwargs)
         self.update_stock()
+
+    def delete(self, *args, **kwargs):
+        # Revert Source (Add back)
+        if self.transfer_order.from_branch:
+            src_stock, _ = BranchStock.objects.get_or_create(branch=self.transfer_order.from_branch, item=self.item)
+            src_stock.quantity += self.quantity
+            src_stock.save()
+            
+        # Revert Dest (Subtract)
+        if self.transfer_order.to_branch:
+            dest_stock, _ = BranchStock.objects.get_or_create(branch=self.transfer_order.to_branch, item=self.item)
+            if dest_stock.quantity >= self.quantity:
+                dest_stock.quantity -= self.quantity
+            else:
+                dest_stock.quantity = 0
+            dest_stock.save()
+            
+        super().delete(*args, **kwargs)
+        self.item.update_item()
 
     def update_stock(self):
         # Update Branch Stock for Source

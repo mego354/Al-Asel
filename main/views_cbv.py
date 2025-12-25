@@ -10,11 +10,12 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from django.views.generic.edit import FormView
 from django.contrib import messages
 from django.db.models import Q, Sum, Count
+from django.db import transaction
 from django.utils.decorators import method_decorator
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
-from .models import Customer, Order, Item, OrderItem, Category, Store_Order, Store_OrderItem, TransferOrder, TransferOrderItem, BranchStock, OrderPayment
+from .models import Customer, Order, Item, OrderItem, Category, Store_Order, Store_OrderItem, TransferOrder, TransferOrderItem, BranchStock, OrderPayment, SupplyTransaction
 from .forms import CategoryForm, CustomerForm, ItemForm
 from decimal import Decimal, InvalidOperation
 import datetime
@@ -110,47 +111,62 @@ class MakeOrderView(LoginRequiredMixin, TemplateView):
         return context
 
     def post(self, request, *args, **kwargs):
-        items_object = {}
-        categories = Category.objects.all()
-        for category in categories:
-            items = Item.objects.filter(category=category).order_by('id')
-            items_object[f"{category.name}"] = items
+        with transaction.atomic():
+            items_object = {}
+            categories = Category.objects.all()
+            for category in categories:
+                items = Item.objects.filter(category=category).order_by('id')
+                items_object[f"{category.name}"] = items
 
-        customer_id = request.POST["customer"]
-        customer = Customer.objects.get(id=customer_id)
-        market_or_gomla = request.POST["market_or_gomla"]
-        
-        # Get selected branch (Mandatory now)
-        branch_id = request.POST.get("branch")
-        if not branch_id:
-             # Fallback or error? Let's assume the form sends it.
-             # If missing, we might default to first shop or error.
-             # For robustness, try to get first shop.
-             branch = Customer.objects.filter(is_shop=True).first()
-        else:
-            branch = Customer.objects.get(id=branch_id)
-        
-        check_order = False
-        if market_or_gomla == "market":
-            order = Order.objects.create(customer=customer, branch=branch)
-        else:
-            order = Order.objects.create(customer=customer, is_gomla=True, branch=branch)
-        
-        for category in items_object.values():
-            for item in category:
-                try:
-                    quantity = int(request.POST[f"quantity_{item.id}"])
-                except ValueError:
-                    quantity = 0
-                if quantity > 0:
-                    OrderItem.objects.create(order=order, item=item, quantity=quantity)
-                    check_order = True
+            customer_id = request.POST["customer"]
+            customer = Customer.objects.get(id=customer_id)
+            
+            # Get selected branch (Mandatory now)
+            branch_id = request.POST.get("branch")
+            if not branch_id:
+                 # Fallback or error? Let's assume the form sends it.
+                 # If missing, we might default to first shop or error.
+                 # For robustness, try to get first shop.
+                 branch = Customer.objects.filter(is_shop=True).first()
+            else:
+                branch = Customer.objects.get(id=branch_id)
+            
+            market_or_gomla = request.POST.get("market_or_gomla", "market")
+            
+            is_gomla = False
+            is_gomla_gomla = False
 
-        if check_order == False:
-            order.delete()
-            return HttpResponseRedirect("/")
+            if market_or_gomla == "gomla":
+                is_gomla = True
+            elif market_or_gomla == "gomla_gomla":
+                is_gomla = True
+                is_gomla_gomla = True
+            
+            check_order = False
+            order = Order.objects.create(
+                customer=customer, 
+                branch=branch, 
+                is_gomla=is_gomla, 
+                is_gomla_gomla=is_gomla_gomla
+            )
+            
+            for category in items_object.values():
+                for item in category:
+                    quantity_val = request.POST.get(f"quantity_{item.id}")
+                    try:
+                        quantity = int(quantity_val) if quantity_val else 0
+                    except ValueError:
+                        quantity = 0
+                    
+                    if quantity > 0:
+                        OrderItem.objects.create(order=order, item=item, quantity=quantity)
+                        check_order = True
 
-        return HttpResponseRedirect(f"/order_info/{order.id}")
+            if check_order == False:
+                order.delete()
+                return HttpResponseRedirect("/")
+
+            return HttpResponseRedirect(f"/order_info/{order.id}")
 
 
 class AddItemsView(LoginRequiredMixin, TemplateView):
@@ -313,6 +329,12 @@ class UserDetailView(LoginRequiredMixin, DetailView):
         arranged_orders = {}
         orders = customer.orders.all().order_by('-created_at')
         
+        # Fetch Coming Orders (If Branch)
+        coming_orders = Store_Order.objects.filter(customer=customer).order_by('-created_at')
+        
+        # Fetch Supplied Orders (If Supplier)
+        supply_orders = Store_Order.objects.filter(supplier=customer).order_by('-created_at')
+
         for order in orders:
             order_time = change_zone(order.created_at)
             y = order_time.strftime("%y")
@@ -333,6 +355,8 @@ class UserDetailView(LoginRequiredMixin, DetailView):
 
         context.update({
             "orders": orders,
+            "coming_orders": coming_orders,
+            "supply_orders": supply_orders,
             "arranged_orders": arranged_orders,
             "total_orders_info": total_orders_info,
         })
@@ -388,24 +412,25 @@ class EditOrderView(LoginRequiredMixin, DetailView):
             if order.total_order_price != Decimal(request.POST["total_order_price"]):
                 order.update_total_prices(Decimal(request.POST["total_order_price"]))
             else:
-                order_items = OrderItem.objects.filter(order=order)
+                with transaction.atomic(): # Wrap updates in transaction
+                    order_items = OrderItem.objects.filter(order=order)
 
-                for order_item in order_items:
-                    new_quantity = request.POST[f"quantity_{order_item.id}"]
-                    try:
-                        if int(new_quantity) < 1:
+                    for order_item in order_items:
+                        new_quantity = request.POST[f"quantity_{order_item.id}"]
+                        try:
+                            if int(new_quantity) < 1:
+                                order_item.delete()
+                            else:
+                                order_item.quantity = Decimal(new_quantity)
+                                order_item.save()
+                        except ValueError:
                             order_item.delete()
-                        else:
-                            order_item.quantity = Decimal(new_quantity)
-                            order_item.save()
-                    except ValueError:
-                        order_item.delete()
-                order.update_same_disc()
-                update_items()
+                    order.update_same_disc()
+                    update_items()
 
-                if not OrderItem.objects.filter(order=order):
-                    order.delete()
-                    return HttpResponseRedirect("/users/")
+                    if not OrderItem.objects.filter(order=order):
+                        order.delete()
+                        return HttpResponseRedirect("/users/")
 
             return HttpResponseRedirect(f"{order.id}")
 
@@ -491,7 +516,11 @@ class ChangeRestView(LoginRequiredMixin, TemplateView):
 
     def post(self, request, *args, **kwargs):
         try:
-            order_id = int(request.GET.get("order_id"))
+            # Try to get from POST first, then GET
+            order_id = request.POST.get("order_id") or request.GET.get("order_id")
+            if not order_id:
+                raise ValueError("No Order ID")
+            order_id = int(order_id)
         except ValueError:
             return render(request, self.template_name, {
                 "err": "لا يمكن البحث عن طلب ب الاحرف او الرموز"
@@ -501,16 +530,31 @@ class ChangeRestView(LoginRequiredMixin, TemplateView):
         if not order:
             return HttpResponseRedirect(f"/order_error/{order_id}")
 
-        rest_money = request.POST["rest_money"]
-        if order.rest_money - Decimal(rest_money) > Decimal(-1):
-            order.rest_money -= Decimal(rest_money)
-            order.save()
-            OrderPayment.objects.create(order=order, amount=Decimal(rest_money))
-            return HttpResponseRedirect(f"/order_info/{order_id}")
-        else:
-            return render(request, self.template_name, {
+        try:
+            # Support both 'rest_money' and 'paid_amount' for compatibility
+            amount_str = request.POST.get("rest_money") or request.POST.get("paid_amount")
+            paid_amount = Decimal(amount_str)
+            
+            if paid_amount <= 0:
+                raise ValueError("Amount must be positive")
+
+            if order.rest_money >= paid_amount:
+                order.rest_money -= paid_amount
+                if order.rest_money <= 0:
+                    order.rest_money = 0
+                    order.is_fully_paid = True
+                order.save()
+                OrderPayment.objects.create(order=order, amount=paid_amount)
+                return HttpResponseRedirect(f"/order_info/{order_id}")
+            else:
+                return render(request, self.template_name, {
+                    "order": order,
+                    "err": "لا يمكن اضافة قسط اعلي من قيمه الآجل"
+                })
+        except (ValueError, InvalidOperation):
+             return render(request, self.template_name, {
                 "order": order,
-                "err": "لا يمكن اضافة قسط اعلي من قيمه الآجل"
+                "err": "قيمة غير صحيحة"
             })
 
 
@@ -535,7 +579,10 @@ class PutRestView(LoginRequiredMixin, TemplateView):
 
     def post(self, request, *args, **kwargs):
         try:
-            order_id = int(request.GET.get("order_id"))
+            order_id = request.POST.get("order_id") or request.GET.get("order_id")
+            if not order_id:
+                 raise ValueError
+            order_id = int(order_id)
         except ValueError:
             return render(request, self.template_name, {
                 "err": "لا يمكن البحث عن طلب ب الاحرف او الرموز"
@@ -545,10 +592,25 @@ class PutRestView(LoginRequiredMixin, TemplateView):
         if not order:
             return HttpResponseRedirect(f"/order_error/{order_id}")
 
-        rest = request.POST["rest_money"]
-        order.rest_money = Decimal(rest)
-        order.is_fully_paid = False
-        order.save()
+        try:
+            new_rest = Decimal(request.POST["rest_money"])
+            
+            # Calculate difference for logging
+            # Old - New = Amount Paid (Positive)
+            # 1000 - 500 = 500 Paid
+            # 0 - 200 = -200 (Debt Added)
+            old_rest = order.rest_money if order.rest_money else Decimal(0)
+            diff = old_rest - new_rest
+            
+            order.rest_money = new_rest
+            order.is_fully_paid = (order.rest_money <= 0)
+            order.save()
+            
+            if diff != 0:
+                OrderPayment.objects.create(order=order, amount=diff)
+
+        except (ValueError, InvalidOperation):
+            pass # Or handle error
 
         return HttpResponseRedirect(f"/order_info/{order_id}")
 
@@ -593,10 +655,30 @@ class ChangeRankView(LoginRequiredMixin, View):
         if not order:
             return HttpResponseRedirect(f"/order_error/{order_id}")
             
-        if order.is_gomla:
+    def get(self, request, order_id, *args, **kwargs):
+        order = get_order(order_id)
+        if not order:
+            return HttpResponseRedirect(f"/order_error/{order_id}")
+            
+        rank = request.GET.get("rank")
+        
+        if rank == "market":
             order.is_gomla = False
-        else:
+            order.is_gomla_gomla = False
+        elif rank == "gomla":
             order.is_gomla = True
+            order.is_gomla_gomla = False
+        elif rank == "gomla_gomla":
+            order.is_gomla = False
+            order.is_gomla_gomla = True
+        else:
+            # Fallback (Toggle/Old logic)
+            if order.is_gomla:
+                order.is_gomla = False
+            else:
+                order.is_gomla = True
+                
+        order.save() # Ensure flags are saved before update methods if they reload
         order.update_same_disc()
         for order_item in OrderItem.objects.filter(order=order):
             order_item.update_profit()
@@ -744,14 +826,14 @@ class UpdateItemView(LoginRequiredMixin, DetailView):
             item.gomla_price = Decimal(gomla_price)
             item.market_price = Decimal(market_price)
             item.save()
-            return render(request, self.template_name, {
-                "item": item,
-                "success_message": "تم حفظ تعديلك بنجاح ",
+            return JsonResponse({
+                "success": True,
+                "message": "تم حفظ تعديلك بنجاح ",
             })
         except:
-            return render(request, self.template_name, {
-                "item": item,
-                "err_message": "حدث خطأ في تحديث بيانات المنتج ",
+            return JsonResponse({
+                "success": False,
+                "message": "حدث خطأ في تحديث بيانات المنتج ",
             })
 
 
@@ -909,37 +991,59 @@ def coming_order(request):
     else:
         customer_id = request.POST["customer"]
         supplier_id = request.POST["supplier"]
-        customer = Customer.objects.get(id=customer_id)
-        supplier = Customer.objects.get(id=supplier_id)
+        
+        try:
+            customer = Customer.objects.get(id=customer_id)
+            supplier = Customer.objects.get(id=supplier_id)
+        except (Customer.DoesNotExist, ValueError):
+             return HttpResponseRedirect("/coming_order") # Or show error
 
         check_order = False
-        order = Store_Order.objects.create(customer=customer, supplier=supplier)
         
-        # We need to iterate over all items to check for quantities in POST
-        # Efficient way: iterate over POST keys
-        for key, value in request.POST.items():
-            if key.startswith('quantity_'):
-                try:
-                    item_id = int(key.split('_')[1])
-                    quantity = int(value)
-                    if quantity > 0:
-                        item = Item.objects.get(id=item_id)
-                        Store_OrderItem.objects.create(
-                            order=order, item=item, quantity=quantity, single_real_price=item.real_price,
-                            single_gomla_price=item.gomla_price, single_market_price=item.market_price
-                        )
-                        check_order = True
-                except (ValueError, Item.DoesNotExist):
-                    continue
+        # Use atomic transaction to prevent partial saves
+        with transaction.atomic():
+            order = Store_Order.objects.create(customer=customer, supplier=supplier)
+            
+            # We need to iterate over all items to check for quantities in POST
+            for key, value in request.POST.items():
+                if key.startswith('quantity_'):
+                    try:
+                        item_id = int(key.split('_')[1])
+                        # Handle empty or invalid quantity strings
+                        if not value or not str(value).isdigit():
+                            continue
+                            
+                        quantity = int(value)
+                        
+                        if quantity > 0:
+                            item = Item.objects.get(id=item_id)
+                            
+                            # Defensive check for prices to avoid TypeError
+                            real_price = item.real_price if item.real_price is not None else Decimal(0)
+                            gomla_price = item.gomla_price if item.gomla_price is not None else Decimal(0)
+                            market_price = item.market_price if item.market_price is not None else Decimal(0)
+                            
+                            Store_OrderItem.objects.create(
+                                order=order, item=item, quantity=quantity, 
+                                single_real_price=real_price,
+                                single_gomla_price=gomla_price, 
+                                single_market_price=market_price
+                            )
+                            check_order = True
+                    except (ValueError, Item.DoesNotExist):
+                        continue
 
-        if check_order == False:
-            order.delete()
-            return HttpResponseRedirect("/coming_order")
+            if check_order == False:
+                order.delete()
+                # If transaction was atomic, manual delete is still fine but rollback would be better. 
+                # Since we are already inside atomic, deleting it is fine.
+                return HttpResponseRedirect("/coming_order")
 
-        last_order = Store_Order.objects.all().exclude(id=order.id).order_by("-id").first()
-        if last_order:
-            last_order.is_done = True
-            last_order.save()
+            last_order = Store_Order.objects.all().exclude(id=order.id).order_by("-id").first()
+            if last_order:
+                last_order.is_done = True
+                last_order.save()
+                
         return HttpResponseRedirect(f"/coming_order/{order.id}")
 
 def add_coming_items(request, order_id):
@@ -968,24 +1072,37 @@ def add_coming_items(request, order_id):
     
     else:
         check_order = False
-        for key, value in request.POST.items():
-            if key.startswith('quantity_'):
-                try:
-                    item_id = int(key.split('_')[1])
-                    quantity = int(value)
-                    if quantity > 0:
-                        item = Item.objects.get(id=item_id)
-                        Store_OrderItem.objects.create(
-                            order=order, item=item, quantity=quantity, single_real_price=item.real_price,
-                            single_gomla_price=item.gomla_price, single_market_price=item.market_price
-                        )
-                        check_order = True
-                except (ValueError, Item.DoesNotExist):
-                    continue
+        with transaction.atomic():
+            for key, value in request.POST.items():
+                if key.startswith('quantity_'):
+                    try:
+                        item_id = int(key.split('_')[1])
+                        # Handle empty or invalid quantity strings
+                        if not value or not str(value).isdigit():
+                            continue
+
+                        quantity = int(value)
+                        if quantity > 0:
+                            item = Item.objects.get(id=item_id)
+                            
+                            # Defensive check for prices
+                            real_price = item.real_price if item.real_price is not None else Decimal(0)
+                            gomla_price = item.gomla_price if item.gomla_price is not None else Decimal(0)
+                            market_price = item.market_price if item.market_price is not None else Decimal(0)
+
+                            Store_OrderItem.objects.create(
+                                order=order, item=item, quantity=quantity, 
+                                single_real_price=real_price,
+                                single_gomla_price=gomla_price, 
+                                single_market_price=market_price
+                            )
+                            check_order = True
+                    except (ValueError, Item.DoesNotExist):
+                        continue
         
-        if check_order:
-            order.is_done = False
-            order.save()
+            if check_order:
+                order.is_done = False
+                order.save()
             
         return redirect('main:coming_order_info', order_id=order.id)
 
@@ -998,25 +1115,97 @@ def coming_order_info(request, order_id):
         "order_items": order_items,
     })
 
+@login_required(login_url="/login/")
 def delete_coming_item(request, item_id):
-    # This will be converted later
-    pass
+    item = get_object_or_404(Store_OrderItem, id=item_id)
+    order_id = item.order.id
+    item.delete()
+    return redirect("main:coming_order_info", order_id=order_id)
 
+@login_required(login_url="/login/")
 def edit_coming_item(request, item_id):
-    # This will be converted later
-    pass
+    item = get_object_or_404(Store_OrderItem, id=item_id)
+    if request.method == "POST":
+        try:
+            item.single_market_price = Decimal(request.POST.get(f"market_{item.id}", item.single_market_price))
+            item.single_gomla_price = Decimal(request.POST.get(f"gomla_{item.id}", item.single_gomla_price))
+            item.single_gomla_gomla_price = Decimal(request.POST.get(f"gomla_gomla_{item.id}", 0)) # Default to 0 if missing
+            item.single_real_price = Decimal(request.POST.get(f"real_{item.id}", item.single_real_price))
+            item.quantity = int(request.POST.get(f"quantity_{item.id}", item.quantity))
+            item.save()
+        except (ValueError, InvalidOperation):
+            messages.error(request, "بيانات غير صحيحة")
+            
+    return redirect("main:coming_order_info", order_id=item.order.id)
 
+@login_required(login_url="/login/")
 def delete_coming_order(request, order_id):
-    # This will be converted later
-    pass
+    order = get_object_or_404(Store_Order, id=order_id)
+    if request.method == "POST":
+        order.delete()
+        messages.success(request, "تم حذف طلبية المورد بنجاح")
+        return redirect("main:all_coming_orders")
+    
+    return render(request, "main/confirm_delete.html", {"object": order, "title": "حذف طلبية مورد"})
 
+@login_required(login_url="/login/")
 def done_coming_order(request, order_id):
-    # This will be converted later
-    pass
+    order = get_object_or_404(Store_Order, id=order_id)
+    order.is_done = True
+    order.save()
+    messages.success(request, "تم حفظ الطلبية بنجاح")
+    return redirect("main:coming_order_info", order_id=order.id)
 
 def store_coming_info(request, store_id):
     # This will be converted later
     pass
+
+@login_required(login_url="/login/")
+def mass_edit_coming_order(request, order_id):
+    order = get_object_or_404(Store_Order, id=order_id)
+    if request.method == "POST":
+        with transaction.atomic():
+            for item in order.order_items.all():
+                try:
+                    # Update fields if present in POST
+                    # We look for keys like 'market_{id}', 'quantity_{id}'
+                    
+                    market_key = f"market_{item.id}"
+                    if market_key in request.POST:
+                        val = request.POST[market_key]
+                        # Empty string should default to 0 if we are parsing decimal
+                        if val: item.single_market_price = Decimal(val)
+                        else: item.single_market_price = Decimal(0)
+                        
+                    gomla_key = f"gomla_{item.id}"
+                    if gomla_key in request.POST:
+                        val = request.POST[gomla_key]
+                        if val: item.single_gomla_price = Decimal(val)
+                        else: item.single_gomla_price = Decimal(0)
+                        
+                    gomla_gomla_key = f"gomla_gomla_{item.id}"
+                    if gomla_gomla_key in request.POST:
+                        val = request.POST[gomla_gomla_key]
+                        if val: item.single_gomla_gomla_price = Decimal(val)
+                        else: item.single_gomla_gomla_price = Decimal(0)
+
+                    real_key = f"real_{item.id}"
+                    if real_key in request.POST:
+                        val = request.POST[real_key]
+                        if val: item.single_real_price = Decimal(val)
+                        else: item.single_real_price = Decimal(0)
+                        
+                    quantity_key = f"quantity_{item.id}"
+                    if quantity_key in request.POST:
+                        val = request.POST[quantity_key]
+                        if val: item.quantity = int(val)
+                        
+                    item.save()
+                except (ValueError, InvalidOperation):
+                    continue # Skip invalid items
+
+        messages.success(request, "تم حفظ التعديلات بنجاح")
+    return redirect("main:coming_order_info", order_id=order.id)
 
 def supplier_coming_info(request, supplier_id):
     # This will be converted later
@@ -1034,9 +1223,40 @@ def all_rest_orders(request):
         "orders": orders,
     })
 
+@login_required(login_url="/login/")
 def all_rest_coming_orders(request):
-    # This will be converted later
-    pass
+    orders = {}
+    # Fetch suppliers and branches (any customer that has rest money on Store_Order)
+    # Since we can't easily filter customers by relation attributes in simple query, we iterate or check reverse relation.
+    # Actually, we can check all customers who have related orders with is_fully_paid=False and are supply orders.
+    
+    customers = Customer.objects.all().order_by('-is_shop', '-name')
+    for customer in customers:
+        # Check for orders where customer is the CUSTOMER (branch receiving goods) or SUPPLIER
+        # Based on naming 'coming_order', it's usually incoming to Branch from Supplier.
+        # But 'Store_Order' has 'customer' (Receiver) and 'supplier' (Sender).
+        # We want to see debts. Who owes whom?
+        # Usually Store_Order represents stock coming IN to the system. 
+        # If I am the admin, I owe the Supplier money.
+        # So we should group by Supplier.
+        
+        # Determine who is the 'creditor' here. The Supplier.
+        # But the view might be wanting to see debts per Branch too?
+        # Let's group by Supplier for now as that's the most common use case (debt to suppliers).
+        
+        # Correction: The user said "apply rest flow... as it works on the normal orders".
+        # Normal orders: Customer owes US money.
+        # Coming orders: We owe SUPPLIER money.
+        
+        # Let's find orders linked to this customer (as Supplier) that are not paid.
+        supplier_rest = Store_Order.objects.filter(supplier=customer, is_fully_paid=False).order_by('created_at')
+        if supplier_rest.exists():
+            orders[customer] = supplier_rest
+            
+    return render(request, "main/all_rest_orders.html", {
+        "orders": orders,
+        "coming": True,
+    })
 
 # Helper functions
 def get_sales_per_year(year, months):
@@ -1099,13 +1319,68 @@ def get_totalsales_formonth(year, month):
     }
     return month_result
 
+@login_required(login_url="/login/")
 def coming_change_rest(request):
-    # This will be converted later
-    pass
+    if request.method == "GET":
+        order_id = request.GET.get("order_id")
+        order = get_object_or_404(Store_Order, id=order_id)
+        return render(request, "main/coming_change_rest.html", {"order": order})
+    else:
+        order_id = request.POST.get("order_id")
+        order = get_object_or_404(Store_Order, id=order_id)
+        try:
+            new_rest = Decimal(request.POST.get("rest_money", 0))
+            
+            # Calculate difference for logging
+            # If rest decreases (Paid), difference is positive.
+            # If rest increases (Debt Added), difference is negative.
+            old_rest = order.rest_money if order.rest_money else Decimal(0)
+            diff = old_rest - new_rest
+            
+            order.rest_money = new_rest
+            order.is_fully_paid = (new_rest <= 0)
+            order.save()
+            
+            if diff != 0:
+                SupplyTransaction.objects.create(order=order, value=diff)
 
+            messages.success(request, "تم تحديث المبلغ المتبقي")
+        except (ValueError, InvalidOperation):
+            messages.error(request, "قيمة غير صحيحة")
+            
+        return redirect("main:coming_order_info", order_id=order.id)
+
+@login_required(login_url="/login/")
 def coming_put_rest(request):
-    # This will be converted later
-    pass
+    if request.method == "GET":
+        order_id = request.GET.get("order_id")
+        order = get_object_or_404(Store_Order, id=order_id)
+        return render(request, "main/coming_put_rest.html", {"order": order})
+    else:
+        order_id = request.POST.get("order_id")
+        order = get_object_or_404(Store_Order, id=order_id)
+        try:
+            paid_amount = Decimal(request.POST.get("paid_amount", 0))
+            if paid_amount > 0:
+                # Logic: Subtract paid amount from rest_money
+                # Note: You might want to track payments in a separate model later
+                if order.rest_money >= paid_amount:
+                    order.rest_money -= paid_amount
+                    if order.rest_money <= 0:
+                        order.is_fully_paid = True
+                        order.rest_money = 0
+                    order.save()
+                    
+                    # Log Transaction
+                    SupplyTransaction.objects.create(order=order, value=paid_amount)
+                    
+                    messages.success(request, "تم خصم المبلغ بنجاح")
+                else:
+                    messages.error(request, "المبلغ المدفوع أكبر من المتبقي")
+        except (ValueError, InvalidOperation):
+             messages.error(request, "قيمة غير صحيحة")
+             
+        return redirect("main:coming_order_info", order_id=order.id)
 
 
 # Management Views for Categories and Items
@@ -1158,7 +1433,7 @@ class ItemManagementView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        items = Item.objects.all().order_by('category__name', 'name')
+        items = Item.objects.all().order_by('category__name', 'name').prefetch_related('branch_stock__branch')
         
         # Get usage statistics for each item
         item_stats = []
@@ -1168,10 +1443,20 @@ class ItemManagementView(LoginRequiredMixin, TemplateView):
                 total=Sum('quantity')
             )['total'] or 0
             
+            # Get branch stocks
+            branch_stocks = []
+            for stock in item.branch_stock.all():
+                if stock.quantity > 0:
+                    branch_stocks.append({
+                        'branch': stock.branch.name,
+                        'quantity': stock.quantity
+                    })
+            
             item_stats.append({
                 'item': item,
                 'total_orders': total_orders,
                 'total_quantity_sold': total_quantity_sold,
+                'branch_stocks': branch_stocks,
                 'can_delete': total_orders == 0  # Can only delete if never used in orders
             })
         
@@ -1194,6 +1479,55 @@ class ItemManagementView(LoginRequiredMixin, TemplateView):
                 "categories": Category.objects.all().order_by('name'),
                 "err_message": "حدث خطأ في تسجيل المنتج من الممكن تشابه الاسم مع اخر موجود بالفعل",
             })
+
+class ItemStockView(LoginRequiredMixin, View):
+    def get(self, request, item_id):
+        item = get_object_or_404(Item, pk=item_id)
+        # Get ALL branches (Shops)
+        branches = Customer.objects.filter(is_shop=True).order_by('name')
+        
+        stocks = []
+        for branch in branches:
+            bs = BranchStock.objects.filter(branch=branch, item=item).first()
+            qty = bs.quantity if bs else 0
+            stocks.append({
+                'branch_id': branch.id,
+                'branch_name': branch.name,
+                'quantity': qty
+            })
+            
+        return JsonResponse({
+            'success': True,
+            'item_name': item.name,
+            'total_stock': item.quantity,
+            'stocks': stocks
+        })
+
+    def post(self, request, item_id):
+        try:
+            item = get_object_or_404(Item, pk=item_id)
+            data = json.loads(request.body)
+            updates = data.get('updates', [])
+            
+            for update in updates:
+                branch_id = update.get('branch_id')
+                qty = update.get('quantity')
+                if branch_id is not None and qty is not None:
+                    try:
+                        qty = int(qty)
+                        if qty < 0: qty = 0
+                        BranchStock.objects.update_or_create(
+                            branch_id=branch_id, 
+                            item=item,
+                            defaults={'quantity': qty}
+                        )
+                    except ValueError:
+                        continue
+            
+            item.update_item() # Recalculate total
+            return JsonResponse({'success': True, 'message': 'تم تحديث المخزون بنجاح'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'message': str(e)})
 
 
 class DeleteCategoryView(LoginRequiredMixin, View):
@@ -1227,29 +1561,28 @@ class DeleteCategoryView(LoginRequiredMixin, View):
 class DeleteItemView(LoginRequiredMixin, View):
     login_url = "/login/"
 
-    def post(self, request, item_id, *args, **kwargs):
-        try:
-            item = Item.objects.get(id=item_id)
-            total_orders = OrderItem.objects.filter(item=item).count()
+    def get(self, request, item_id):
+        item = get_object_or_404(Item, id=item_id)
+        # Check usage
+        if OrderItem.objects.filter(item=item).exists():
+            messages.error(request, f'لا يمكن حذف المنتج "{item.name}" لأنه مستخدم في طلبات')
+            return redirect('main:item_management')
             
-            if total_orders > 0:
-                return JsonResponse({
-                    'success': False,
-                    'message': f'لا يمكن حذف المنتج "{item.name}" لأنه مستخدم في {total_orders} طلب'
-                })
+        return render(request, "main/confirm_delete.html", {
+            "title": "حذف منتج",
+            "object": item.name
+        })
+
+    def post(self, request, item_id):
+        item = get_object_or_404(Item, id=item_id)
+        if OrderItem.objects.filter(item=item).exists():
+            messages.error(request, f'لا يمكن حذف المنتج "{item.name}" لأنه مستخدم في طلبات')
+            return redirect('main:item_management')
             
-            item_name = item.name
-            item.delete()
-            
-            return JsonResponse({
-                'success': True,
-                'message': f'تم حذف المنتج "{item_name}" بنجاح'
-            })
-        except Item.DoesNotExist:
-            return JsonResponse({
-                'success': False,
-                'message': 'المنتج غير موجود'
-            })
+        name = item.name
+        item.delete()
+        messages.success(request, f'تم حذف المنتج "{name}" بنجاح')
+        return redirect('main:item_management')
 
 
 class UpdateCategoryView(LoginRequiredMixin, View):
@@ -1300,6 +1633,7 @@ class UpdateItemView(LoginRequiredMixin, View):
             category_id = request.POST.get('category')
             real_price = request.POST.get('real_price')
             gomla_price = request.POST.get('gomla_price')
+            gomla_gomla_price = request.POST.get('gomla_gomla_price')
             market_price = request.POST.get('market_price')
             stock_quantity = request.POST.get('stock_quantity')
             
@@ -1321,6 +1655,7 @@ class UpdateItemView(LoginRequiredMixin, View):
             try:
                 real_price = Decimal(real_price) if real_price else Decimal('0')
                 gomla_price = Decimal(gomla_price) if gomla_price else Decimal('0')
+                gomla_gomla_price = Decimal(gomla_gomla_price) if gomla_gomla_price else Decimal('0')
                 market_price = Decimal(market_price) if market_price else Decimal('0')
                 stock_quantity = int(stock_quantity) if stock_quantity else 0
             except (ValueError, InvalidOperation):
@@ -1343,6 +1678,7 @@ class UpdateItemView(LoginRequiredMixin, View):
             item.category = category
             item.real_price = real_price
             item.gomla_price = gomla_price
+            item.gomla_gomla_price = gomla_gomla_price
             item.market_price = market_price
             item.stock_quantity = stock_quantity
             item.save()
@@ -1417,52 +1753,53 @@ class MakeTransferView(LoginRequiredMixin, TemplateView):
         return context
 
     def post(self, request, *args, **kwargs):
-        from_branch_id = request.POST.get("from_branch")
-        to_branch_id = request.POST.get("to_branch")
-        
-        from_branch = None
-        if from_branch_id:
-            from_branch = Customer.objects.get(id=from_branch_id)
+        with transaction.atomic():
+            from_branch_id = request.POST.get("from_branch")
+            to_branch_id = request.POST.get("to_branch")
             
-        to_branch = None
-        if to_branch_id:
-            to_branch = Customer.objects.get(id=to_branch_id)
-            
-        # Create Transfer Order
-        transfer_order = TransferOrder.objects.create(
-            from_branch=from_branch,
-            to_branch=to_branch
-        )
-        
-        items_object = {}
-        categories = Category.objects.all()
-        for category in categories:
-            items = Item.objects.filter(category=category).order_by('id')
-            items_object[f"{category.name}"] = items
-
-        has_items = False
-        for category in items_object.values():
-            for item in category:
-                try:
-                    quantity = int(request.POST.get(f"quantity_{item.id}", 0))
-                except ValueError:
-                    quantity = 0
+            from_branch = None
+            if from_branch_id:
+                from_branch = Customer.objects.get(id=from_branch_id)
                 
-                if quantity > 0:
-                    TransferOrderItem.objects.create(
-                        transfer_order=transfer_order,
-                        item=item,
-                        quantity=quantity
-                    )
-                    has_items = True
-        
-        if not has_items:
-            transfer_order.delete()
-            messages.error(request, "لم يتم اختيار أي منتجات للنقل")
-            return redirect("main:make_transfer")
+            to_branch = None
+            if to_branch_id:
+                to_branch = Customer.objects.get(id=to_branch_id)
+                
+            # Create Transfer Order
+            transfer_order = TransferOrder.objects.create(
+                from_branch=from_branch,
+                to_branch=to_branch
+            )
             
-        messages.success(request, "تم تسجيل النقل بنجاح")
-        return redirect("main:transfer_history")
+            items_object = {}
+            categories = Category.objects.all()
+            for category in categories:
+                items = Item.objects.filter(category=category).order_by('id')
+                items_object[f"{category.name}"] = items
+
+            has_items = False
+            for category in items_object.values():
+                for item in category:
+                    try:
+                        quantity = int(request.POST.get(f"quantity_{item.id}", 0))
+                    except ValueError:
+                        quantity = 0
+                    
+                    if quantity > 0:
+                        TransferOrderItem.objects.create(
+                            transfer_order=transfer_order,
+                            item=item,
+                            quantity=quantity
+                        )
+                        has_items = True
+            
+            if not has_items:
+                transfer_order.delete()
+                messages.error(request, "لم يتم اختيار أي منتجات للنقل")
+                return redirect("main:make_transfer")
+                
+            messages.success(request, "تم تسجيل النقل بنجاح")
+            return redirect("main:transfer_history")
 
 class TransferHistoryView(LoginRequiredMixin, ListView):
     model = TransferOrder
@@ -1528,31 +1865,76 @@ class DeleteTransferView(LoginRequiredMixin, View):
     def get(self, request, pk, *args, **kwargs):
         transfer = get_object_or_404(TransferOrder, pk=pk)
         
-        # Revert stock changes
-        # Logic:
-        # Transfer was: Source -> Dest
-        # Revert: Source gets stock back (+), Dest loses stock (-)
-        
-        for item in transfer.items.all():
-            # Revert Source Stock
-            if transfer.from_branch:
-                source_stock, _ = BranchStock.objects.get_or_create(branch=transfer.from_branch, item=item.item)
-                source_stock.quantity += item.quantity
-                source_stock.save()
-            
-            # Revert Dest Stock
-            if transfer.to_branch:
-                dest_stock, _ = BranchStock.objects.get_or_create(branch=transfer.to_branch, item=item.item)
-                # Ensure we don't go negative (though logic implies we have it)
-                if dest_stock.quantity >= item.quantity:
-                    dest_stock.quantity -= item.quantity
-                else:
-                    dest_stock.quantity = 0
-                dest_stock.save()
-            
-            # Update global item stock if needed (though we rely on BranchStock now)
-            item.item.update_item()
-
+        # Note: TransferOrder.delete() now handles stock reversion via iterating items
         transfer.delete()
         messages.success(request, "تم حذف التحويل واسترجاع الكميات بنجاح")
         return redirect("main:transfer_history")
+
+class BranchStockAPIView(LoginRequiredMixin, View):
+    def get(self, request, branch_id):
+        try:
+            branch = Customer.objects.get(id=branch_id, is_shop=True)
+            stocks = BranchStock.objects.filter(branch=branch)
+            stock_data = {stock.item.id: stock.quantity for stock in stocks}
+            return JsonResponse({'success': True, 'stock': stock_data})
+        except Customer.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Branch not found'}, status=404)
+
+class UpdateCustomerView(LoginRequiredMixin, UpdateView):
+    model = Customer
+    form_class = CustomerForm
+    template_name = "main/create_customer.html"
+    pk_url_kwarg = "customer_id"
+    login_url = "/login/"
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = "تعديل بيانات العميل"
+        context['is_update'] = True
+        return context
+        
+    def get_success_url(self):
+        messages.success(self.request, "تم تحديث بيانات العميل بنجاح.")
+        return reverse("main:user", args=[self.object.id])
+
+    def form_valid(self, form):
+        customer = self.get_object()
+        
+        # Check if is_supplier is being unchecked
+        if customer.is_supplier and not form.cleaned_data.get('is_supplier'):
+            if customer.supplier_orders.exists():
+                messages.error(self.request, "لا يمكن إلغاء صفة المورد لوجود طلبيات توريد مسجلة باسمه.")
+                return self.form_invalid(form)
+
+        # Check if is_shop is being unchecked (optional, but good practice)
+        if customer.is_shop and not form.cleaned_data.get('is_shop'):
+            has_stock = BranchStock.objects.filter(branch=customer, quantity__gt=0).exists()
+            has_coming_orders = customer.coming_orders.exists()
+            if has_stock or has_coming_orders:
+                messages.error(self.request, "لا يمكن إلغاء صفة المتجر/الفرع لوجود مخزون أو طلبيات واردة.")
+                return self.form_invalid(form)
+
+        return super().form_valid(form)
+
+class DeleteCustomerView(LoginRequiredMixin, View):
+    login_url = "/login/"
+
+    def post(self, request, customer_id, *args, **kwargs):
+        customer = get_object_or_404(Customer, id=customer_id)
+        
+        # Validation checks
+        has_orders = customer.orders.exists()
+        has_coming_orders = customer.coming_orders.exists()
+        is_supplier_in_orders = customer.supplier_orders.exists()
+        # Check stock manually
+        has_stock = BranchStock.objects.filter(branch=customer, quantity__gt=0).exists()
+        has_transfers_sent = customer.transfers_sent.exists()
+        has_transfers_received = customer.transfers_received.exists()
+
+        if has_orders or has_coming_orders or is_supplier_in_orders or has_stock or has_transfers_sent or has_transfers_received:
+            messages.error(request, "لا يمكن حذف هذا العميل/الفرع لأنه مرتبط بطلبات أو مخزون أو تحويلات.")
+            return HttpResponseRedirect(reverse("main:user", args=[customer.id]))
+            
+        customer.delete()
+        messages.success(request, "تم حذف العميل بنجاح.")
+        return HttpResponseRedirect(reverse("main:users"))

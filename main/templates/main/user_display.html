@@ -32,20 +32,8 @@
   </ol>
 </nav>
 
-{% if not orders %}
-<!-- No Orders State -->
-<div class="text-center py-12">
-  <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 max-w-md mx-auto">
-    <i class="fa-solid fa-inbox text-6xl text-gray-400 mb-4"></i>
-    <h1 class="text-2xl font-semibold text-gray-900 mb-2">لا يوجد طلبات</h1>
-    <h2 class="text-lg text-gray-600 mb-6">للعميل {{ customer.name }}</h2>
-    <a href="{% url 'main:users' %}" class="bg-primary hover:bg-primary/90 text-white font-medium py-3 px-6 rounded-lg transition-colors">
-      <i class="fa-solid fa-search ml-2"></i>
-      ابحث عن عميل آخر
-    </a>
-  </div>
-</div>
-{% else %}
+</nav>
+
 <!-- Customer Header -->
 <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
   <div class="p-6">
@@ -72,16 +60,53 @@
           </p>
         </div>
       </div>
-      <button 
-        onclick="openModal()" 
-        class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-      >
-        <i class="fa-solid fa-chart-bar ml-2"></i>
-        إحصائيات
-      </button>
+      <div class="flex items-center space-x-2 space-x-reverse">
+        <a 
+          href="{% url 'main:update_customer' customer.id %}"
+          class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+        >
+          <i class="fa-solid fa-edit ml-2"></i>
+          تعديل
+        </a>
+        
+        <form action="{% url 'main:delete_customer' customer.id %}" method="post" onsubmit="return confirm('هل أنت متأكد من حذف هذا العميل؟ لا يمكن التراجع عن هذا الإجراء.');" class="inline">
+            {% csrf_token %}
+            <button 
+              type="submit"
+              class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+            >
+              <i class="fa-solid fa-trash ml-2"></i>
+              حذف
+            </button>
+        </form>
+
+        <button 
+          onclick="openModal()" 
+          class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+        >
+          <i class="fa-solid fa-chart-bar ml-2"></i>
+          إحصائيات
+        </button>
+      </div>
     </div>
   </div>
 </div>
+
+{% if not orders and not coming_orders and not supply_orders %}
+<!-- No Orders State -->
+<div class="text-center py-12">
+  <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 max-w-md mx-auto">
+    <i class="fa-solid fa-inbox text-6xl text-gray-400 mb-4"></i>
+    <h1 class="text-2xl font-semibold text-gray-900 mb-2">لا يوجد طلبات</h1>
+    <h2 class="text-lg text-gray-600 mb-6">للعميل {{ customer.name }}</h2>
+    <a href="{% url 'main:users' %}" class="bg-primary hover:bg-primary/90 text-white font-medium py-3 px-6 rounded-lg transition-colors">
+      <i class="fa-solid fa-search ml-2"></i>
+      ابحث عن عميل آخر
+    </a>
+  </div>
+</div>
+{% else %}
+
 
 <!-- Payment Progress -->
 {% if percent %}
@@ -198,6 +223,68 @@
     </table>
   </div>
 </div>
+
+<!-- Coming Orders Table (For Branches) -->
+{% if coming_orders %}
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 mt-6">
+  <div class="p-6 border-b border-gray-200">
+    <h2 class="text-lg font-semibold text-gray-900">طلبيات موردة للفرع (Coming Orders)</h2>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المورد</th>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">السعر</th>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">التاريخ</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        {% for order in coming_orders %}
+        <tr class="hover:bg-gray-50 transition-colors cursor-pointer" onclick="window.location='{% url 'main:coming_order_info' order.id %}';">
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#{{ order.id }}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ order.supplier.name|default:"غير محدد" }}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ order.total_order_price }} ج.م</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ order.created_at|date:"Y-m-d" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<!-- Supply Orders Table (For Suppliers) -->
+{% if supply_orders %}
+<div class="bg-white rounded-lg shadow-sm border border-gray-200 mt-6">
+  <div class="p-6 border-b border-gray-200">
+    <h2 class="text-lg font-semibold text-gray-900">طلبيات صادرة من المورد (Supplied Orders)</h2>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">الفرع المستلم</th>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">السعر</th>
+          <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">التاريخ</th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        {% for order in supply_orders %}
+        <tr class="hover:bg-gray-50 transition-colors cursor-pointer" onclick="window.location='{% url 'main:coming_order_info' order.id %}';">
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#{{ order.id }}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ order.customer.name }}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ order.total_order_price }} ج.م</td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ order.created_at|date:"Y-m-d" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
 
 <!-- Statistics Modal -->
 <div id="statisticsModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">

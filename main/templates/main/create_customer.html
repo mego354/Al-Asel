@@ -35,14 +35,25 @@
   <div class="bg-white rounded-lg shadow-sm border border-gray-200">
     <div class="p-6 border-b border-gray-200">
       <h1 class="text-2xl font-semibold text-gray-900 flex items-center">
+        {% if is_update %}
+        <i class="fa-solid fa-user-edit text-primary ml-2"></i>
+        تعديل بيانات العميل
+        {% else %}
         <i class="fa-solid fa-user-plus text-primary ml-2"></i>
         إضافة عميل جديد
+        {% endif %}
       </h1>
-      <p class="text-gray-600 mt-2">أدخل بيانات العميل الجديد في النموذج أدناه</p>
+      <p class="text-gray-600 mt-2">
+        {% if is_update %}
+        تعديل البيانات الحالية للعميل
+        {% else %}
+        أدخل بيانات العميل الجديد في النموذج أدناه
+        {% endif %}
+      </p>
     </div>
     
     <div class="p-6">
-      <form action="{% url 'main:create_customer' %}" method="post" class="space-y-6">
+      <form action="{% if is_update %}{% url 'main:update_customer' form.instance.id %}{% else %}{% url 'main:create_customer' %}{% endif %}" method="post" class="space-y-6">
         {% csrf_token %}
 
         <!-- Customer Name -->
@@ -81,11 +92,34 @@
           {% endif %}
         </div>
 
+        {% if form.is_shop %}
+        <!-- Shop Checkbox -->
+        <div class="bg-gray-50 rounded-lg p-4">
+          <div class="flex items-center space-x-3 space-x-reverse">
+            {{ form.is_shop }}
+            <div>
+              <label for="{{ form.is_shop.id_for_label }}" class="text-sm font-medium text-gray-700 cursor-pointer">
+                متجر / فرع
+              </label>
+              <p class="text-xs text-gray-500 mt-1">حدد هذا الخيار إذا كان العميل يمثل فرع للمحل (Shop)</p>
+            </div>
+          </div>
+          {% if form.is_shop.errors %}
+            <div class="mt-2 text-sm text-red-600">{{ form.is_shop.errors.0 }}</div>
+          {% endif %}
+        </div>
+        {% endif %}
+
         <!-- Submit Button -->
         <div class="pt-4">
           <button type="submit" class="w-full bg-primary hover:bg-primary/90 text-white font-medium py-3 px-4 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+            {% if is_update %}
+            <i class="fa-solid fa-save ml-2"></i>
+            حفظ التعديلات
+            {% else %}
             <i class="fa-solid fa-user-plus ml-2"></i>
             تسجيل العميل
+            {% endif %}
           </button>
         </div>
       </form>

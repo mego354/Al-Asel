@@ -24,6 +24,7 @@ urlpatterns = [
     path("create_item", views.CreateItemView.as_view(), name="create_item"),
     path("coming_order", views.coming_order, name="coming_order"),
     path("coming_order/<int:order_id>", views.coming_order_info, name="coming_order_info"),
+    path("coming_order/<int:order_id>/mass_edit", views.mass_edit_coming_order, name="mass_edit_coming_order"),
     path("coming_order/<int:order_id>/add_items", views.add_coming_items, name="add_coming_items"),
     path("coming_put_rest", views.coming_put_rest, name="coming_put_rest"),
     path("coming_change_rest", views.coming_change_rest, name="coming_change_rest"),
@@ -46,6 +47,7 @@ urlpatterns = [
     path("manage/items/<int:item_id>/delete", views.DeleteItemView.as_view(), name="delete_item"),
     path("manage/categories/<int:category_id>/update", views.UpdateCategoryView.as_view(), name="update_category"),
     path("manage/items/<int:item_id>/update", views.UpdateItemView.as_view(), name="update_item_management"),
+    path("manage/items/<int:item_id>/stock", views.ItemStockView.as_view(), name="item_stock"),
     
     # Transfer URLs
     path("transfer/make/", views.MakeTransferView.as_view(), name="make_transfer"),
@@ -57,4 +59,8 @@ urlpatterns = [
     path("help", views.HelpView.as_view(), name="help"),
     ###################### api ######################         
     path("users_search/<str:text>", views.UsersSearchView.as_view(), name="users_search"),
+    path("api/branch_stock/<int:branch_id>", views.BranchStockAPIView.as_view(), name="api_branch_stock"),
+    
+    path("users/<int:customer_id>/update", views.UpdateCustomerView.as_view(), name="update_customer"),
+    path("users/<int:customer_id>/delete", views.DeleteCustomerView.as_view(), name="delete_customer"),
 ]

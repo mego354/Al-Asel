@@ -75,20 +75,16 @@
             </div>
 
             <!-- Quantity Input -->
-            <div class="pt-2">
-              <input type="number" name="quantity_{{ item.id }}" placeholder="الكمية" value="0" min="0"
-                max="{{ item.branch_quantity }}"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-center"
-                oninput="if(typeof calculateTotal === 'function') { calculateTotal(); } else if(typeof calculateTotalFallback === 'function') { calculateTotalFallback(); } else { console.error('No calculateTotal function available'); }"
-                onchange="if(typeof calculateTotal === 'function') { calculateTotal(); } else if(typeof calculateTotalFallback === 'function') { calculateTotalFallback(); } else { console.error('No calculateTotal function available'); }"
-                data-market-price="{{ item.market_price|stringformat:'.2f' }}"
-                data-gomla-price="{{ item.gomla_price|stringformat:'.2f' }}">
+            <div class="mt-4">
+              <label class="block text-sm font-medium text-gray-700 mb-1">الكمية:</label>
+              <input type="number" name="quantity_{{ item.id }}" min="0" max="{{ item.branch_quantity }}"
+                class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+                placeholder="0" data-market-price="{{ item.market_price }}" data-gomla-price="{{ item.gomla_price }}"
+                data-gomla-gomla-price="{{ item.gomla_gomla_price }}"
+                onchange="if(typeof calculateTotal === 'function') { calculateTotal(); }">
             </div>
-          </div>
 
-          <!-- Item Footer -->
-          <div class="px-4 py-3 bg-gray-50 border-t border-gray-100">
-            <div class="text-right">
+            <div class="flex justify-between items-center pt-2 border-t border-gray-100 mt-3">
               <small class="text-sm text-gray-500 stock" data-quantity="{{ item.branch_quantity }}">
                 المخزون: <span class="font-medium">{{ item.branch_quantity }}</span>
               </small>
@@ -105,48 +101,54 @@
   <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
     <div class="space-y-6">
       <!-- Customer Selection -->
-      <div class="flex items-center space-x-4 space-x-reverse">
-        <label class="text-lg font-medium text-primary whitespace-nowrap">العميل:</label>
-        <select name="customer"
-          class="flex-1 px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
-          {% for customer in customers %}
-          <option value="{{customer.id}}">{{customer}}</option>
-          {% endfor %}
-        </select>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="flex items-center space-x-4 space-x-reverse">
+          <label class="text-lg font-medium text-primary whitespace-nowrap">العميل:</label>
+          <select name="customer"
+            class="flex-1 px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+            {% for customer in customers %}
+            <option value="{{customer.id}}">{{customer}}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="flex items-center space-x-4 space-x-reverse">
+          <label class="text-lg font-medium text-primary whitespace-nowrap">الفرع (المصدر):</label>
+          <select name="branch" id="branch-select" onchange="updateBranchStock(this.value)"
+            class="flex-1 px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
+            {% for branch in branches %}
+            <option value="{{branch.id}}" {% if selected_branch.id == branch.id %}selected{% endif %}>{{branch.name}}</option>
+            {% endfor %}
+          </select>
+        </div>
       </div>
 
-      <!-- Branch Selection -->
-      <div class="flex items-center space-x-4 space-x-reverse">
-        <label class="text-lg font-medium text-primary whitespace-nowrap">الفرع (البائع):</label>
-        <select name="branch" id="branch-selector" onchange="window.location.href='?branch=' + this.value"
-          class="flex-1 px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary">
-          {% for branch in branches %}
-          <option value="{{branch.id}}" {% if selected_branch.id == branch.id %}selected{% endif %}>{{branch.name}}</option>
-          {% endfor %}
-        </select>
-      </div>
-
-      <!-- Order Type Selection -->
       <div class="flex items-center space-x-6 space-x-reverse">
         <span class="text-lg font-medium text-gray-700">نوع الطلب:</span>
         <div class="flex items-center space-x-4 space-x-reverse">
           <label class="flex items-center space-x-2 space-x-reverse cursor-pointer">
             <input type="radio" id="market" name="market_or_gomla" value="market" checked="checked"
               class="h-4 w-4 text-primary focus:ring-primary border-gray-300"
-              onchange="if(typeof calculateTotal === 'function') { calculateTotal(); } else if(typeof calculateTotalFallback === 'function') { calculateTotalFallback(); } else { console.error('No calculateTotal function available'); }">
-            <span class="text-sm font-medium text-gray-700">ماركت</span>
+              onchange="if(typeof calculateTotal === 'function') { calculateTotal(); }">
+            <span class="text-gray-700 font-medium">ماركت</span>
           </label>
           <label class="flex items-center space-x-2 space-x-reverse cursor-pointer">
             <input type="radio" id="gomla" name="market_or_gomla" value="gomla"
               class="h-4 w-4 text-primary focus:ring-primary border-gray-300"
-              onchange="if(typeof calculateTotal === 'function') { calculateTotal(); } else if(typeof calculateTotalFallback === 'function') { calculateTotalFallback(); } else { console.error('No calculateTotal function available'); }">
-            <span class="text-sm font-medium text-gray-700">جملة</span>
+              onchange="if(typeof calculateTotal === 'function') { calculateTotal(); }">
+            <span class="text-gray-700 font-medium">جملة</span>
+          </label>
+          <label class="flex items-center space-x-2 space-x-reverse cursor-pointer">
+            <input type="radio" id="gomla_gomla" name="market_or_gomla" value="gomla_gomla"
+              class="h-4 w-4 text-primary focus:ring-primary border-gray-300"
+              onchange="if(typeof calculateTotal === 'function') { calculateTotal(); }">
+            <span class="text-gray-700 font-medium">جملة الجملة</span>
           </label>
         </div>
       </div>
 
       <!-- Total Price Display -->
-      <div class="bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-lg p-6">
+      <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
         <div class="flex items-center justify-between">
           <div class="text-right">
             <h3 class="text-xl font-bold text-primary">إجمالي الطلب</h3>
@@ -172,5 +174,65 @@
   </div>
 </form>
 
-<script src="{% static 'main/makee.js' %}"></script>
+<script src="{% static 'main/make.js' %}"></script>
+<script>
+function updateBranchStock(branchId) {
+  if (!branchId) return;
+  
+  fetch(`/api/branch_stock/${branchId}`)
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        const stockData = data.stock;
+        
+        // Update all items
+        document.querySelectorAll('.item-card').forEach(card => {
+          const input = card.querySelector('input[type="number"]');
+          const stockDisplay = card.querySelector('.stock span');
+          const stockContainer = card.querySelector('.stock');
+          
+          if (input) {
+            const itemId = input.name.replace('quantity_', '');
+            const quantity = stockData[itemId] || 0;
+            
+            // Update max attribute
+            input.max = quantity;
+            input.dataset.quantity = quantity; // Update data attribute if used
+            
+            // Update display
+            if (stockDisplay) {
+              stockDisplay.textContent = quantity;
+            }
+            
+            // Update styling based on availability
+            if (quantity === 0) {
+              stockContainer.innerHTML = "غير متوفر";
+              stockContainer.classList.add('text-red-500');
+              input.disabled = true;
+              input.value = 0; // Reset quantity if no stock
+            } else {
+              stockContainer.innerHTML = `المخزون: <span class="font-medium">${quantity}</span>`;
+              stockContainer.classList.remove('text-red-500');
+              input.disabled = false;
+            }
+          }
+        });
+        
+        // Recalculate total in case quantities were reset
+        if (typeof calculateTotal === 'function') {
+          calculateTotal();
+        }
+      }
+    })
+    .catch(error => console.error('Error fetching stock:', error));
+}
+
+// Initial update if branch is selected
+document.addEventListener('DOMContentLoaded', function() {
+  const branchSelect = document.getElementById('branch-select');
+  if (branchSelect && branchSelect.value) {
+    updateBranchStock(branchSelect.value);
+  }
+});
+</script>
 {% endblock %}

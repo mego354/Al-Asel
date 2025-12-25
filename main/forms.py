@@ -4,7 +4,7 @@ from .models import Item, Category, Customer
 class ItemForm(forms.ModelForm):
     class Meta:
         model = Item
-        fields = ['category', 'name', 'real_price', 'gomla_price', 'market_price', 'stock_quantity']
+        fields = ['category', 'name', 'real_price', 'gomla_price', 'gomla_gomla_price', 'market_price', 'stock_quantity']
         widgets = {
             'category': forms.Select(attrs={
                 'class': 'w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary'
@@ -18,6 +18,11 @@ class ItemForm(forms.ModelForm):
                 'step': '0.01'
             }),
             'gomla_price': forms.NumberInput(attrs={
+                'class': 'w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary',
+                'min': '0.00',
+                'step': '0.01'
+            }),
+            'gomla_gomla_price': forms.NumberInput(attrs={
                 'class': 'w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary',
                 'min': '0.00',
                 'step': '0.01'

@@ -48,10 +48,13 @@
             غير مدفوع بالكامل
           </span>
         {% endif %}
-        {% if order.is_gomla %}
-          <span class="px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">جملة</span>
+        
+        {% if order.is_gomla_gomla %}
+            <span class="px-3 py-1 bg-purple-100 text-purple-800 text-sm font-medium rounded-full">جملة الجملة</span>
+        {% elif order.is_gomla %}
+            <span class="px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">جملة</span>
         {% else %}
-          <span class="px-3 py-1 bg-gray-100 text-gray-800 text-sm font-medium rounded-full">ماركت</span>
+            <span class="px-3 py-1 bg-gray-100 text-gray-800 text-sm font-medium rounded-full">ماركت</span>
         {% endif %}
       </div>
     </div>
@@ -127,9 +130,14 @@
           <tbody class="bg-white divide-y divide-gray-200">
             {% for payment in payments %}
             <tr class="hover:bg-gray-50 transition-colors">
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600 font-bold">
-                <i class="fa-solid fa-arrow-down ml-1"></i>
-                {{ payment.amount }} ج.م
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-bold {% if payment.amount < 0 %}text-red-600{% else %}text-green-600{% endif %}" dir="ltr">
+                {% if payment.amount < 0 %}
+                  <i class="fa-solid fa-arrow-up ml-1"></i>
+                  {{ payment.amount }} ج.م
+                {% else %}
+                  <i class="fa-solid fa-arrow-down ml-1"></i>
+                  {{ payment.amount }} ج.م
+                {% endif %}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" dir="ltr">
                 {{ payment.date|date:"Y-m-d h:i A" }}
@@ -187,41 +195,45 @@
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
           {% for order_item in order_items %}
-          <tr class="hover:bg-gray-50">
+          <tr class="hover:bg-gray-50 transition-colors">
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
               {{ order_item.item.name }}
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-              {% if order.is_gomla %}
-                {{ order_item.item.gomla_price|stringformat:'.2f' }} ج.م
+              {% if order.is_gomla_gomla %}
+                {{ order_item.item.gomla_gomla_price|stringformat:'.2f' }}
+              {% elif order.is_gomla %}
+                {{ order_item.item.gomla_price|stringformat:'.2f' }}
               {% else %}
-                {{ order_item.item.market_price|stringformat:'.2f' }} ج.م
+                {{ order_item.item.market_price|stringformat:'.2f' }}
               {% endif %}
+              ج.م
             </td>
             <td class="px-6 py-4 whitespace-nowrap">
               <input 
-                type="number"
-                name="quantity_{{ order_item.id }}"
+                type="number" 
+                name="quantity_{{ order_item.id }}" 
                 value="{{ order_item.quantity }}"
                 min="0"
                 max="{{ order_item.item.quantity }}"
-                data-original-quantity="{{ order_item.quantity }}"
-                class="w-20 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-center"
-                onclick="updateMaxQuantity(this, {{ order_item.quantity }}, {{ order_item.item.quantity }})"
+                class="w-20 px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-center"
               >
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
-              {% if order.is_gomla %}
-                {{ order_item.gomla_price|stringformat:'.2f' }} ج.م
+              {% if order.is_gomla_gomla %}
+                {{ order_item.gomla_gomla_price|stringformat:'.2f' }}
+              {% elif order.is_gomla %}
+                {{ order_item.gomla_price|stringformat:'.2f' }}
               {% else %}
-                {{ order_item.market_price|stringformat:'.2f' }} ج.م
+                {{ order_item.market_price|stringformat:'.2f' }}
               {% endif %}
+              ج.م
             </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
               <a 
-                href="{% url 'main:delete_order_item' order_item.id %}" 
-                class="text-red-600 hover:text-red-900 delete_item"
-                data-id="{{ order_item.id }}"
+                href="{% url 'main:delete_item' order_item.id %}" 
+                class="text-red-600 hover:text-red-900 transition-colors"
+                title="حذف العنصر"
                 onclick="return confirm('هل أنت متأكد من حذف هذا العنصر؟')"
               >
                 <i class="fa-solid fa-trash"></i>
@@ -248,34 +260,23 @@
         حذف الطلب
       </a>
 
-      {% if order.is_fully_paid %}
-      <a href="{% url 'main:put_rest' %}?order_id={{order.id}}" 
-         class="px-6 py-2 bg-yellow-600 hover:bg-yellow-700 text-white font-medium rounded-lg transition-colors">
-        <i class="fa-solid fa-plus ml-2"></i>
-        إضافة قسط
-      </a>
-      {% else %}
-      <a href="{% url 'main:change_rest' %}?order_id={{order.id}}" 
+      {% if not order.is_fully_paid %}
+      <button onclick="openPaymentModal()" 
+         type="button"
          class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors">
         <i class="fa-solid fa-money-bill-wave ml-2"></i>
         دفع قسط
-      </a>
+      </button>
       {% endif %}
 
-      {% if order_items %}
-      <a href="{% url 'main:change_rank' order.id %}" 
-         class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
-        <i class="fa-solid fa-exchange-alt ml-2"></i>
-        {% if order.is_gomla %}
-          تحويل إلى ماركت
-        {% else %}
-          تحويل إلى جملة
-        {% endif %}
+      <a href="{% url 'main:put_rest' %}?order_id={{order.id}}" 
+         class="px-6 py-2 bg-yellow-600 hover:bg-yellow-700 text-white font-medium rounded-lg transition-colors">
+        <i class="fa-solid fa-edit ml-2"></i>
+        {% if order.is_fully_paid %}إضافة مبلغ آجل{% else %}تعديل المتبقي يدوياً{% endif %}
       </a>
-      {% endif %}
-
+      
       <a href="{% url 'main:add_items' order.id %}" 
-         class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-colors">
+         class="px-6 py-2 bg-primary hover:bg-primary/90 text-white font-medium rounded-lg transition-colors">
         <i class="fa-solid fa-plus ml-2"></i>
         إضافة منتج
       </a>
@@ -287,9 +288,116 @@
         حفظ التعديل
       </button>
       {% endif %}
+      
+      <button onclick="openTypeModal()" 
+         type="button"
+         class="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors">
+        <i class="fa-solid fa-tags ml-2"></i>
+        تغيير نوع السعر
+      </button>
     </div>
   </form>
 </div>
 
 <script src="{% static 'main/order_table.js' %}"></script>
+
+<!-- Payment Modal -->
+<div id="paymentModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+  <div class="bg-white rounded-lg p-8 max-w-md w-full mx-4 relative">
+    <button onclick="closePaymentModal()" type="button" class="absolute top-4 left-4 text-gray-400 hover:text-gray-600">
+      <i class="fa-solid fa-times text-xl"></i>
+    </button>
+    
+    <h3 class="text-xl font-semibold text-gray-900 mb-2">دفع قسط</h3>
+    <p class="text-gray-600 mb-6">المبلغ المتبقي: {{ order.rest_money }} ج.م</p>
+    
+    <form action="{% url 'main:change_rest' %}" method="post">
+      {% csrf_token %}
+      <input type="hidden" name="order_id" value="{{ order.id }}">
+      
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-gray-700 mb-2">المبلغ المدفوع</label>
+        <input 
+          type="number" 
+          name="paid_amount" 
+          min="0" 
+          max="{{ order.rest_money }}" 
+          step="0.01" 
+          required 
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-lg text-center"
+          placeholder="أدخل المبلغ"
+        >
+      </div>
+      
+      <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 rounded-lg transition-colors">
+        <i class="fa-solid fa-check ml-2"></i>
+        تأكيد الدفع
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+function openPaymentModal() {
+  document.getElementById('paymentModal').classList.remove('hidden');
+}
+function closePaymentModal() {
+  document.getElementById('paymentModal').classList.add('hidden');
+}
+</script>
+
+<!-- Type Change Modal -->
+<div id="typeModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+  <div class="bg-white rounded-lg p-8 max-w-sm w-full mx-4 relative">
+    <button onclick="closeTypeModal()" type="button" class="absolute top-4 left-4 text-gray-400 hover:text-gray-600">
+      <i class="fa-solid fa-times text-xl"></i>
+    </button>
+    
+    <h3 class="text-xl font-semibold text-gray-900 mb-6 text-center">اختر نوع السعر</h3>
+    
+    <div class="space-y-4">
+      <a href="{% url 'main:change_rank' order.id %}?rank=market" 
+         class="flex items-center justify-between w-full p-4 border rounded-lg hover:bg-gray-50 transition-colors {% if not order.is_gomla and not order.is_gomla_gomla %}border-green-500 bg-green-50{% else %}border-gray-200{% endif %}">
+        <div class="flex items-center">
+          <i class="fa-solid fa-store text-gray-400 ml-3"></i>
+          <span class="font-medium text-gray-900">سعر ماركت (قطاعي)</span>
+        </div>
+        {% if not order.is_gomla and not order.is_gomla_gomla %}
+        <i class="fa-solid fa-check text-green-600"></i>
+        {% endif %}
+      </a>
+
+      <a href="{% url 'main:change_rank' order.id %}?rank=gomla" 
+         class="flex items-center justify-between w-full p-4 border rounded-lg hover:bg-gray-50 transition-colors {% if order.is_gomla %}border-blue-500 bg-blue-50{% else %}border-gray-200{% endif %}">
+        <div class="flex items-center">
+          <i class="fa-solid fa-box text-blue-400 ml-3"></i>
+          <span class="font-medium text-gray-900">سعر جملة</span>
+        </div>
+        {% if order.is_gomla %}
+        <i class="fa-solid fa-check text-blue-600"></i>
+        {% endif %}
+      </a>
+
+      <a href="{% url 'main:change_rank' order.id %}?rank=gomla_gomla" 
+         class="flex items-center justify-between w-full p-4 border rounded-lg hover:bg-gray-50 transition-colors {% if order.is_gomla_gomla %}border-purple-500 bg-purple-50{% else %}border-gray-200{% endif %}">
+        <div class="flex items-center">
+          <i class="fa-solid fa-boxes-stacked text-purple-400 ml-3"></i>
+          <span class="font-medium text-gray-900">سعر جملة الجملة</span>
+        </div>
+        {% if order.is_gomla_gomla %}
+        <i class="fa-solid fa-check text-purple-600"></i>
+        {% endif %}
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+function openTypeModal() {
+  document.getElementById('typeModal').classList.remove('hidden');
+}
+function closeTypeModal() {
+  document.getElementById('typeModal').classList.add('hidden');
+}
+</script>
 {% endblock %}

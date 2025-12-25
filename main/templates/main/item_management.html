@@ -69,6 +69,13 @@
           {% endif %}
         </div>
         <div>
+          <label for="{{ form.gomla_gomla_price.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">سعر جملة الجملة</label>
+          {{ form.gomla_gomla_price }}
+          {% if form.gomla_gomla_price.errors %}
+            <p class="text-red-600 text-sm mt-1">{{ form.gomla_gomla_price.errors.0 }}</p>
+          {% endif %}
+        </div>
+        <div>
           <label for="{{ form.market_price.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">سعر السوق</label>
           {{ form.market_price }}
           {% if form.market_price.errors %}
@@ -140,13 +147,26 @@
                 <div class="space-y-1">
                   <div>حقيقي: <span class="font-semibold">{{ stat.item.real_price }}</span> ج.م</div>
                   <div>جملة: <span class="font-semibold">{{ stat.item.gomla_price }}</span> ج.م</div>
+                  <div>جملة الجملة: <span class="font-semibold">{{ stat.item.gomla_gomla_price }}</span> ج.م</div>
                   <div>سوق: <span class="font-semibold">{{ stat.item.market_price }}</span> ج.م</div>
                 </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm text-gray-900">
-                  <div>المخزون: <span class="font-semibold">{{ stat.item.stock_quantity }}</span></div>
-                  <div>المستخدم: <span class="font-semibold text-orange-600">{{ stat.item.used_quantity }}</span></div>
+                  <div>المخزون الكلي: <span class="font-semibold">{{ stat.item.quantity }}</span></div>
+                  
+                  {% if stat.branch_stocks %}
+                  <div class="mt-2 text-xs text-gray-500 border-t border-gray-100 pt-1 space-y-1">
+                    {% for stock in stat.branch_stocks %}
+                    <div class="flex justify-between items-center">
+                      <span>{{ stock.branch }}:</span>
+                      <span class="font-medium text-gray-700">{{ stock.quantity }}</span>
+                    </div>
+                    {% endfor %}
+                  </div>
+                  {% endif %}
+                  
+                  <div class="mt-2 border-t border-gray-100 pt-1">المستخدم: <span class="font-semibold text-orange-600">{{ stat.item.used_quantity }}</span></div>
                 </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -157,21 +177,29 @@
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                 <div class="flex space-x-2 space-x-reverse">
+{% load l10n %}
                   <button 
-                    onclick="editItem({{ stat.item.id }}, '{{ stat.item.name|escapejs }}', {{ stat.item.category.id }}, {{ stat.item.real_price }}, {{ stat.item.gomla_price }}, {{ stat.item.market_price }}, {{ stat.item.stock_quantity }})"
+                    onclick="editItem({{ stat.item.id|unlocalize }}, '{{ stat.item.name|escapejs }}', {{ stat.item.category.id|unlocalize }}, {{ stat.item.real_price|unlocalize }}, {{ stat.item.gomla_price|unlocalize }}, {{ stat.item.gomla_gomla_price|unlocalize }}, {{ stat.item.market_price|unlocalize }})"
                     class="text-blue-600 hover:text-blue-900 p-2 hover:bg-blue-100 rounded-lg transition-colors"
                     title="تعديل"
                   >
                     <i class="fa-solid fa-edit"></i>
                   </button>
+                  <button 
+                    onclick="manageStock({{ stat.item.id|unlocalize }})"
+                    class="text-green-600 hover:text-green-900 p-2 hover:bg-green-100 rounded-lg transition-colors"
+                    title="إدارة المخزون"
+                  >
+                    <i class="fa-solid fa-warehouse"></i>
+                  </button>
                   {% if stat.can_delete %}
-                    <button 
-                      onclick="deleteItem({{ stat.item.id }}, '{{ stat.item.name|escapejs }}')"
+                    <a 
+                      href="{% url 'main:delete_item' stat.item.id %}"
                       class="text-red-600 hover:text-red-900 p-2 hover:bg-red-100 rounded-lg transition-colors"
                       title="حذف"
                     >
                       <i class="fa-solid fa-trash"></i>
-                    </button>
+                    </a>
                   {% else %}
                     <button 
                       disabled
@@ -256,6 +284,18 @@
             >
           </div>
           <div>
+            <label for="editGomlaGomlaPrice" class="block text-sm font-medium text-gray-700 mb-2">سعر جملة الجملة</label>
+            <input 
+              type="number" 
+              id="editGomlaGomlaPrice" 
+              name="gomla_gomla_price" 
+              step="0.01" 
+              min="0"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+              required
+            >
+          </div>
+          <div>
             <label for="editMarketPrice" class="block text-sm font-medium text-gray-700 mb-2">سعر السوق</label>
             <input 
               type="number" 
@@ -267,17 +307,7 @@
               required
             >
           </div>
-          <div>
-            <label for="editStockQuantity" class="block text-sm font-medium text-gray-700 mb-2">كمية المخزون</label>
-            <input 
-              type="number" 
-              id="editStockQuantity" 
-              name="stock_quantity" 
-              min="0"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-              required
-            >
-          </div>
+
         </div>
         <div class="flex space-x-3 space-x-reverse mt-6">
           <button 
@@ -299,20 +329,54 @@
   </div>
 </div>
 
+<!-- Stock Management Modal -->
+<div id="stockModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+  <div class="flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[80vh] flex flex-col">
+      <div class="p-6 border-b border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900">توزيع المخزون</h3>
+        <p class="text-sm text-gray-500 mt-1" id="stockItemName">جاري التحميل...</p>
+      </div>
+      
+      <div class="p-6 overflow-y-auto flex-1">
+        <div id="stockLoading" class="text-center py-8">
+          <i class="fa-solid fa-spinner fa-spin text-3xl text-primary"></i>
+        </div>
+        
+        <form id="stockForm" class="hidden space-y-4">
+          <div id="stockList" class="space-y-3">
+            <!-- Stock Rows Injected JS -->
+          </div>
+        </form>
+      </div>
+
+      <div class="p-6 border-t border-gray-200 flex space-x-3 space-x-reverse">
+        <button onclick="closeStockModal()" class="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-400">
+          إلغاء
+        </button>
+        <button onclick="saveStock()" class="flex-1 bg-primary text-white py-2 px-4 rounded-lg hover:bg-primary/90">
+          <i class="fa-solid fa-save ml-2"></i>
+          حفظ التوزيع
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Alert Container -->
 <div id="alertContainer" class="fixed top-4 right-4 z-50 space-y-2 space-y-reverse"></div>
 
 <script>
 let currentItemId = null;
 
-function editItem(id, name, categoryId, realPrice, gomlaPrice, marketPrice, stockQuantity) {
+function editItem(id, name, categoryId, realPrice, gomlaPrice, gomlaGomlaPrice, marketPrice) {
   currentItemId = id;
   document.getElementById('editName').value = name;
   document.getElementById('editCategory').value = categoryId;
   document.getElementById('editRealPrice').value = realPrice;
   document.getElementById('editGomlaPrice').value = gomlaPrice;
+  document.getElementById('editGomlaGomlaPrice').value = gomlaGomlaPrice;
   document.getElementById('editMarketPrice').value = marketPrice;
-  document.getElementById('editStockQuantity').value = stockQuantity;
   document.getElementById('editModal').classList.remove('hidden');
 }
 
@@ -321,27 +385,7 @@ function closeEditModal() {
   currentItemId = null;
 }
 
-function deleteItem(id, name) {
-  if (confirm(`هل أنت متأكد من حذف المنتج "${name}"؟`)) {
-    fetch(`/manage/items/${id}/delete`, {
-      method: 'POST',
-      headers: {
-        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-        'Content-Type': 'application/json',
-      },
-    })
-    .then(response => response.json())
-    .then(data => {
-      showAlert(data.message, data.success ? 'success' : 'error');
-      if (data.success) {
-        setTimeout(() => location.reload(), 1500);
-      }
-    })
-    .catch(error => {
-      showAlert('حدث خطأ في الاتصال', 'error');
-    });
-  }
-}
+
 
 document.getElementById('editForm').addEventListener('submit', function(e) {
   e.preventDefault();
@@ -447,6 +491,93 @@ function filterItems(searchText) {
         row.style.display = 'none';
       }
     }
+  });
+}
+</script>
+<script>
+let currentStockItemId = null;
+
+function manageStock(itemId) {
+  currentStockItemId = itemId;
+  document.getElementById('stockModal').classList.remove('hidden');
+  document.getElementById('stockLoading').classList.remove('hidden');
+  document.getElementById('stockForm').classList.add('hidden');
+  document.getElementById('stockItemName').textContent = 'جاري التحميل...';
+  
+  fetch(`/manage/items/${itemId}/stock`)
+    .then(r => r.json())
+    .then(data => {
+      if(data.success) {
+        document.getElementById('stockItemName').textContent = data.item_name + ' (الإجمالي: ' + data.total_stock + ')';
+        const list = document.getElementById('stockList');
+        list.innerHTML = '';
+        
+        data.stocks.forEach(stock => {
+          const div = document.createElement('div');
+          div.className = "flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200";
+          div.innerHTML = `
+            <span class="font-medium text-gray-700">${stock.branch_name}</span>
+            <input 
+              type="number" 
+              class="w-24 px-2 py-1 border border-gray-300 rounded text-center focus:ring-primary focus:border-primary branch-stock-input"
+              data-branch="${stock.branch_id}"
+              value="${stock.quantity}"
+              min="0"
+            >
+          `;
+          list.appendChild(div);
+        });
+        
+        document.getElementById('stockLoading').classList.add('hidden');
+        document.getElementById('stockForm').classList.remove('hidden');
+      } else {
+        showAlert('حدث خطأ في جلب البيانات', 'error');
+        closeStockModal();
+      }
+    })
+    .catch(() => {
+      showAlert('فشل الاتصال', 'error');
+      closeStockModal();
+    });
+}
+
+function closeStockModal() {
+  document.getElementById('stockModal').classList.add('hidden');
+  currentStockItemId = null;
+}
+
+function saveStock() {
+  if(!currentStockItemId) return;
+  
+  const inputs = document.querySelectorAll('.branch-stock-input');
+  const updates = [];
+  
+  inputs.forEach(input => {
+    updates.push({
+      branch_id: input.dataset.branch,
+      quantity: input.value
+    });
+  });
+  
+  fetch(`/manage/items/${currentStockItemId}/stock`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+    },
+    body: JSON.stringify({ updates: updates })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if(data.success) {
+      showAlert(data.message, 'success');
+      setTimeout(() => location.reload(), 1000);
+    } else {
+      showAlert(data.message || 'حدث خطأ', 'error');
+    }
+  })
+  .catch(() => {
+    showAlert('فشل الحفظ', 'error');
   });
 }
 </script>

@@ -1,0 +1,74 @@
+{% extends "main/layout.html" %}
+{% load static %}
+
+{% block body %}
+<!-- Breadcrumb -->
+<nav class="flex mb-6" aria-label="Breadcrumb">
+  <ol class="inline-flex items-center space-x-1 space-x-reverse md:space-x-2 md:space-x-reverse">
+    <li class="inline-flex items-center">
+      <a href="javascript:history.back()" class="text-sm font-medium text-gray-700 hover:text-primary">رجوع</a>
+    </li>
+    <li>
+      <div class="flex items-center">
+        <i class="fa-solid fa-chevron-left text-gray-400 mx-1"></i>
+        <span class="ml-1 text-sm font-medium text-primary md:ml-2">{{ title }}</span>
+      </div>
+    </li>
+  </ol>
+</nav>
+
+<!-- Confirmation Card -->
+<div class="max-w-2xl mx-auto">
+  <div class="bg-white rounded-lg shadow-lg border border-red-200">
+    <div class="p-8 text-center">
+      <!-- Warning Icon -->
+      <div class="mb-6">
+        <i class="fa-solid fa-exclamation-triangle text-6xl text-red-500"></i>
+      </div>
+      
+      <!-- Warning Message -->
+      <h1 class="text-3xl font-bold text-gray-900 mb-4">{{ title }}</h1>
+      <p class="text-lg text-gray-600 mb-6">
+        هل أنت متأكد من حذف: 
+        <span class="font-bold text-gray-900">{{ object }}</span>
+        ؟
+      </p>
+      
+      <!-- Warning Notice -->
+      <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
+        <div class="flex items-start">
+          <i class="fa-solid fa-info-circle text-red-500 text-xl ml-3 mt-1"></i>
+          <div class="text-right">
+            <h3 class="font-semibold text-red-800 mb-2">تحذير مهم</h3>
+            <p class="text-red-700 text-sm">
+              هذا الإجراء لا يمكن التراجع عنه.
+            </p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Action Buttons -->
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <form method="post" class="flex-1">
+          {% csrf_token %}
+          <button 
+            type="submit" 
+            class="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-6 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+          >
+            <i class="fa-solid fa-trash ml-2"></i>
+            تأكيد الحذف
+          </button>
+        </form>
+        
+        <a 
+          href="javascript:history.back()" 
+          class="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-medium py-3 px-6 rounded-lg transition-colors text-center focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+        >
+          <i class="fa-solid fa-times ml-2"></i>
+          إلغاء
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

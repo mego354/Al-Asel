@@ -1,64 +1,76 @@
 // Test if script is loading
-console.log('makee.js script loaded');
+console.log('make.js script loaded');
 
 // Define calculateTotal function immediately (before DOM ready)
 function calculateTotal() {
   try {
-    console.log('calculateTotal called');
+    // console.log('calculateTotal called');
     let total = 0;
     let itemCount = 0;
-
+    
     // Check if elements exist
     const priceTypeElement = document.getElementById('price-type');
     const itemCountElement = document.getElementById('item-count');
     const totalElement = document.getElementById('total-price');
-
-    // If elements don't exist (e.g. in create_store_order), just return or handle gracefully
-    if (!totalElement) {
-      return;
+    
+    // Determine price type (default to market)
+    let priceType = 'market';
+    let priceTypeText = 'سعر الماركت';
+    
+    const marketRadio = document.getElementById('market');
+    const gomlaRadio = document.getElementById('gomla');
+    const gomlaGomlaRadio = document.getElementById('gomla_gomla');
+    
+    if (gomlaRadio && gomlaRadio.checked) {
+      priceType = 'gomla';
+      priceTypeText = 'سعر الجملة';
+    } else if (gomlaGomlaRadio && gomlaGomlaRadio.checked) {
+      priceType = 'gomla_gomla';
+      priceTypeText = 'سعر جملة الجملة';
     }
-
-    // Get selected price type
-    const selectedPriceType = document.querySelector('input[name="market_or_gomla"]:checked');
-    // If no price type (e.g. coming_order doesn't have market/gomla radio), default to something or skip
-    const isGomla = selectedPriceType ? selectedPriceType.value === 'gomla' : false;
-
+    
     // Update price type display if element exists
     if (priceTypeElement) {
-      if (isGomla) {
-        priceTypeElement.textContent = 'سعر الجملة';
-      } else {
-        priceTypeElement.textContent = 'سعر الماركت';
-      }
+      priceTypeElement.textContent = priceTypeText;
     }
-
-    // Calculate total for all quantity inputs
-    document.querySelectorAll('input[type="number"][name^="quantity_"]').forEach(input => {
-      const quantity = parseFloat(input.value) || 0;
-      const marketPrice = parseFloat(input.getAttribute('data-market-price')) || 0;
-      const gomlaPrice = parseFloat(input.getAttribute('data-gomla-price')) || 0;
-
+    
+    // Calculate total
+    const inputs = document.querySelectorAll('input[type="number"]');
+    inputs.forEach(input => {
+      const quantity = parseInt(input.value) || 0;
       if (quantity > 0) {
-        itemCount++;
-        const price = isGomla ? gomlaPrice : marketPrice;
+        itemCount += quantity;
+        
+        // Get price based on type
+        let price = 0;
+        if (priceType === 'market') {
+          price = parseFloat(input.dataset.marketPrice) || 0;
+        } else if (priceType === 'gomla') {
+          price = parseFloat(input.dataset.gomlaPrice) || 0;
+        } else if (priceType === 'gomla_gomla') {
+          price = parseFloat(input.dataset.gomlaGomlaPrice) || 0;
+        }
+        
         total += quantity * price;
       }
     });
-
-    // Update total display
-    totalElement.textContent = total.toFixed(2) + ' ج.م';
-
-    // Update item count
+    
+    // Update display
     if (itemCountElement) {
       itemCountElement.textContent = itemCount + ' عنصر';
     }
-
-    // Add animation effect
-    totalElement.style.transition = 'transform 0.15s ease-in-out';
-    totalElement.style.transform = 'scale(1.05)';
-    setTimeout(() => {
-      totalElement.style.transform = 'scale(1)';
-    }, 150);
+    
+    if (totalElement) {
+      totalElement.textContent = total.toFixed(2) + ' ج.م';
+      
+      // Add animation effect
+      totalElement.style.transition = 'transform 0.15s ease-in-out';
+      totalElement.style.transform = 'scale(1.05)';
+      setTimeout(() => {
+        totalElement.style.transform = 'scale(1)';
+      }, 150);
+    }
+    
   } catch (error) {
     console.error('Error in calculateTotal:', error);
   }
@@ -68,21 +80,8 @@ function calculateTotal() {
 window.calculateTotal = calculateTotal;
 console.log('calculateTotal function made globally available');
 
-// Add fallback function in case the main one fails
-window.calculateTotalFallback = function () {
-  console.log('Using fallback calculateTotal function');
-  try {
-    const totalElement = document.getElementById('total-price');
-    if (totalElement) {
-      totalElement.textContent = '0.00 ج.م';
-    }
-  } catch (error) {
-    console.error('Fallback function also failed:', error);
-  }
-};
-
 document.addEventListener('DOMContentLoaded', function () {
-  console.log('makee.js loaded and DOM ready');
+  console.log('make.js loaded and DOM ready');
 
   // Category toggle functionality
   const categoryHeaders = document.querySelectorAll('.category-header');
@@ -94,6 +93,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Input field functionality
   document.querySelectorAll('input[type="number"]').forEach(input => {
+    // Add input listener for real-time updates
+    input.addEventListener('input', calculateTotal);
+    
     input.addEventListener('focus', () => {
       if (input.value === "0") {
         input.value = "";
@@ -104,12 +106,19 @@ document.addEventListener('DOMContentLoaded', function () {
       if (input.value === "") {
         input.value = "0";
       }
+      calculateTotal(); // Ensure total is updated on blur
     });
 
     input.addEventListener('wheel', (event) => {
       event.preventDefault();
       input.blur();
     });
+  });
+
+  // Radio button functionality
+  const radioButtons = document.querySelectorAll('input[name="market_or_gomla"]');
+  radioButtons.forEach(radio => {
+    radio.addEventListener('change', calculateTotal);
   });
 
   // Stock availability display

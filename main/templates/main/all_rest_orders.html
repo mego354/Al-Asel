@@ -86,7 +86,9 @@
           <thead class="bg-gray-50">
             <tr>
               <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
-              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المورد</th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                {% if coming %}الفرع المستلم{% else %}الفرع البائع{% endif %}
+              </th>
               <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">السعر</th>
               <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">المتبقي</th>
               <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">التوقيت</th>
@@ -114,8 +116,13 @@
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="flex items-center">
-                  <i class="fa-solid fa-truck text-green-500 ml-2"></i>
-                  <span class="text-sm font-medium text-gray-900">{{ order.supplier.name }}</span>
+                  {% if coming %}
+                    <i class="fa-solid fa-store text-blue-500 ml-2"></i>
+                    <span class="text-sm font-medium text-gray-900">{{ order.customer.name }}</span>
+                  {% else %}
+                    <i class="fa-solid fa-store text-gray-500 ml-2"></i>
+                    <span class="text-sm font-medium text-gray-900">{{ order.branch.name|default:"-" }}</span>
+                  {% endif %}
                 </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
