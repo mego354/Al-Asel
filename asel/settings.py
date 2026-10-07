@@ -30,7 +30,7 @@ DEBUG = ENVIRONMENT != 'production'
 if ENVIRONMENT == 'production':
     ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
 else:
-    ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', 'website.pythonanywhere.com']
 
 # Application definition
 INSTALLED_APPS = [
@@ -118,6 +118,7 @@ if ENVIRONMENT == 'production':
     ]
 else:
     # Development static files configuration
+    STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
     STATICFILES_DIRS = [
         os.path.join(BASE_DIR, 'main/static'),
     ]
@@ -136,12 +137,12 @@ if ENVIRONMENT == 'production':
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'DENY'
-    
+
     # HTTPS settings (uncomment when you have SSL certificate)
     # SECURE_SSL_REDIRECT = True
     # SESSION_COOKIE_SECURE = True
     # CSRF_COOKIE_SECURE = True
-    
+
     # Additional security headers
     SECURE_HSTS_SECONDS = 31536000  # 1 year
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
@@ -230,7 +231,7 @@ if ENVIRONMENT == 'development':
     # INSTALLED_APPS.append('debug_toolbar')
     # MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
     # INTERNAL_IPS = ['127.0.0.1']
-    
+
     # Additional development settings
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
@@ -238,7 +239,7 @@ if ENVIRONMENT == 'development':
 if ENVIRONMENT == 'production':
     # Disable Django's built-in server error page
     DEBUG_PROPAGATE_EXCEPTIONS = True
-    
+
     # Additional production optimizations
     CONN_MAX_AGE = 60
 

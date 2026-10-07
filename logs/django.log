@@ -7029,3 +7029,41 @@ INFO 2025-12-25 21:26:23,995 basehttp 26220 13256 "GET /api/branch_stock/1 HTTP/
 INFO 2025-12-25 21:26:57,587 basehttp 26220 13256 "GET /users/ HTTP/1.1" 200 36768
 INFO 2025-12-25 21:26:59,544 basehttp 26220 13256 "GET / HTTP/1.1" 200 49336
 INFO 2025-12-25 21:26:59,643 basehttp 26220 13256 "GET /api/branch_stock/1 HTTP/1.1" 200 30
+INFO 2026-10-08 02:01:10,456 autoreload 135 136415629486976 Watching for file changes with StatReloader
+ERROR 2026-10-08 02:02:54,448 exception 2 130998757078912 Invalid HTTP_HOST header: 'website.pythonanywhere.com'. You may need to add 'website.pythonanywhere.com' to ALLOWED_HOSTS.
+Traceback (most recent call last):
+  File "/home/website/venvs/myproject/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/home/website/venvs/myproject/lib/python3.13/site-packages/django/utils/deprecation.py", line 133, in __call__
+    response = self.process_request(request)
+  File "/home/website/venvs/myproject/lib/python3.13/site-packages/django/middleware/common.py", line 48, in process_request
+    host = request.get_host()
+  File "/home/website/venvs/myproject/lib/python3.13/site-packages/django/http/request.py", line 151, in get_host
+    raise DisallowedHost(msg)
+django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: 'website.pythonanywhere.com'. You may need to add 'website.pythonanywhere.com' to ALLOWED_HOSTS.
+WARNING 2026-10-08 02:02:54,519 log 2 130998757078912 Bad Request: /
+ERROR 2026-10-08 02:02:55,157 exception 2 130998757078912 Invalid HTTP_HOST header: 'website.pythonanywhere.com'. You may need to add 'website.pythonanywhere.com' to ALLOWED_HOSTS.
+Traceback (most recent call last):
+  File "/home/website/venvs/myproject/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/home/website/venvs/myproject/lib/python3.13/site-packages/django/utils/deprecation.py", line 133, in __call__
+    response = self.process_request(request)
+  File "/home/website/venvs/myproject/lib/python3.13/site-packages/django/middleware/common.py", line 48, in process_request
+    host = request.get_host()
+  File "/home/website/venvs/myproject/lib/python3.13/site-packages/django/http/request.py", line 151, in get_host
+    raise DisallowedHost(msg)
+django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: 'website.pythonanywhere.com'. You may need to add 'website.pythonanywhere.com' to ALLOWED_HOSTS.
+WARNING 2026-10-08 02:02:55,197 log 2 130998757078912 Bad Request: /favicon.ico
+ERROR 2026-10-08 02:02:55,523 exception 2 130998757078912 Invalid HTTP_HOST header: 'website.pythonanywhere.com'. You may need to add 'website.pythonanywhere.com' to ALLOWED_HOSTS.
+Traceback (most recent call last):
+  File "/home/website/venvs/myproject/lib/python3.13/site-packages/django/core/handlers/exception.py", line 55, in inner
+    response = get_response(request)
+  File "/home/website/venvs/myproject/lib/python3.13/site-packages/django/utils/deprecation.py", line 133, in __call__
+    response = self.process_request(request)
+  File "/home/website/venvs/myproject/lib/python3.13/site-packages/django/middleware/common.py", line 48, in process_request
+    host = request.get_host()
+  File "/home/website/venvs/myproject/lib/python3.13/site-packages/django/http/request.py", line 151, in get_host
+    raise DisallowedHost(msg)
+django.core.exceptions.DisallowedHost: Invalid HTTP_HOST header: 'website.pythonanywhere.com'. You may need to add 'website.pythonanywhere.com' to ALLOWED_HOSTS.
+WARNING 2026-10-08 02:02:55,550 log 2 130998757078912 Bad Request: /
+WARNING 2026-10-08 02:03:30,816 log 2 140558238009216 Not Found: /favicon.ico
